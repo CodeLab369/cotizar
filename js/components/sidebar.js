@@ -225,17 +225,17 @@ class SidebarManager {
      * Muestra el sidebar
      */
     show() {
-        this.sidebar.classList.remove('hidden');
-        this.toggleBtn.classList.remove('hidden');
+        this.sidebar?.classList.remove('hidden');
+        this.toggleBtn?.classList.remove('hidden');
     }
 
     /**
      * Oculta el sidebar
      */
     hide() {
-        this.sidebar.classList.add('hidden');
-        this.toggleBtn.classList.add('hidden');
-        this.overlay.classList.remove('active');
+        this.sidebar?.classList.add('hidden');
+        this.toggleBtn?.classList.add('hidden');
+        this.overlay?.classList.remove('active');
     }
 
     /**
