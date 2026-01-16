@@ -129,9 +129,11 @@ class SidebarManager {
      * Vincula los eventos
      */
     bindEvents() {
+        if (!this.sidebar) return;
+        
         // Click en items del menú
-        const menuItems = this.sidebar?.querySelectorAll('.sidebar-menu-item[data-page]');
-        menuItems?.forEach(item => {
+        const menuItems = this.sidebar.querySelectorAll('.sidebar-menu-item[data-page]');
+        menuItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const page = item.dataset.page;
@@ -149,7 +151,7 @@ class SidebarManager {
         });
 
         // Click en logout
-        const logoutBtn = this.sidebar?.querySelector('#sidebar-logout');
+        const logoutBtn = this.sidebar.querySelector('#sidebar-logout');
         logoutBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             if (typeof this.onNavigate === 'function') {
@@ -180,8 +182,10 @@ class SidebarManager {
      * @param {string} page - Página activa
      */
     setActive(page) {
-        const items = this.sidebar?.querySelectorAll('.sidebar-menu-item');
-        items?.forEach(item => {
+        if (!this.sidebar) return;
+        
+        const items = this.sidebar.querySelectorAll('.sidebar-menu-item');
+        items.forEach(item => {
             item.classList.remove('active');
             if (item.dataset.page === page) {
                 item.classList.add('active');
