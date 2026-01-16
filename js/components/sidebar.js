@@ -130,8 +130,8 @@ class SidebarManager {
      */
     bindEvents() {
         // Click en items del menú
-        const menuItems = this.sidebar.querySelectorAll('.sidebar-menu-item[data-page]');
-        menuItems.forEach(item => {
+        const menuItems = this.sidebar?.querySelectorAll('.sidebar-menu-item[data-page]');
+        menuItems?.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const page = item.dataset.page;
@@ -149,7 +149,7 @@ class SidebarManager {
         });
 
         // Click en logout
-        const logoutBtn = this.sidebar.querySelector('#sidebar-logout');
+        const logoutBtn = this.sidebar?.querySelector('#sidebar-logout');
         logoutBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             if (typeof this.onNavigate === 'function') {
@@ -180,8 +180,8 @@ class SidebarManager {
      * @param {string} page - Página activa
      */
     setActive(page) {
-        const items = this.sidebar.querySelectorAll('.sidebar-menu-item');
-        items.forEach(item => {
+        const items = this.sidebar?.querySelectorAll('.sidebar-menu-item');
+        items?.forEach(item => {
             item.classList.remove('active');
             if (item.dataset.page === page) {
                 item.classList.add('active');
@@ -194,9 +194,11 @@ class SidebarManager {
      * Abre el sidebar en móvil
      */
     openMobile() {
-        this.sidebar.classList.add('mobile-open');
-        this.overlay.classList.add('active');
-        this.toggleBtn.innerHTML = SIDEBAR_ICONS.close;
+        this.sidebar?.classList.add('mobile-open');
+        this.overlay?.classList.add('active');
+        if (this.toggleBtn) {
+            this.toggleBtn.innerHTML = SIDEBAR_ICONS.close;
+        }
         this.isOpen = true;
     }
 
@@ -204,9 +206,11 @@ class SidebarManager {
      * Cierra el sidebar en móvil
      */
     closeMobile() {
-        this.sidebar.classList.remove('mobile-open');
-        this.overlay.classList.remove('active');
-        this.toggleBtn.innerHTML = SIDEBAR_ICONS.menu;
+        this.sidebar?.classList.remove('mobile-open');
+        this.overlay?.classList.remove('active');
+        if (this.toggleBtn) {
+            this.toggleBtn.innerHTML = SIDEBAR_ICONS.menu;
+        }
         this.isOpen = false;
     }
 
