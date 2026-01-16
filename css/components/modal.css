@@ -1,0 +1,202 @@
+/**
+ * NICMAT S.R.L. - Sistema de Cotización
+ * Componente: Modal / Diálogos
+ * @version 1.0.0
+ */
+
+/* Overlay del modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-overlay);
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Contenedor del modal */
+.modal {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-xl);
+    max-width: 500px;
+    width: 100%;
+    max-height: calc(100vh - var(--spacing-2xl));
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9) translateY(-20px);
+    opacity: 0;
+    transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+.modal-overlay.active .modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Tamaños del modal */
+.modal-sm {
+    max-width: 360px;
+}
+
+.modal-lg {
+    max-width: 700px;
+}
+
+.modal-xl {
+    max-width: 900px;
+}
+
+.modal-fullscreen {
+    max-width: calc(100vw - var(--spacing-2xl));
+    max-height: calc(100vh - var(--spacing-2xl));
+    height: 100%;
+}
+
+/* Header del modal */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+    background-color: var(--color-gray-100);
+    color: var(--text-primary);
+}
+
+.modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Body del modal */
+.modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Footer del modal */
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    background-color: var(--color-gray-50);
+}
+
+/* Modal de confirmación */
+.modal-confirm {
+    text-align: center;
+}
+
+.modal-confirm .modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-full);
+}
+
+.modal-confirm .modal-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.modal-confirm .modal-icon.icon-warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.modal-confirm .modal-icon.icon-danger {
+    background-color: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.modal-confirm .modal-icon.icon-success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.modal-confirm .modal-icon.icon-info {
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.modal-confirm .modal-title {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.modal-confirm .modal-message {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-confirm .modal-footer {
+    justify-content: center;
+    background-color: transparent;
+    border-top: none;
+    padding-top: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: var(--spacing-md);
+    }
+    
+    .modal {
+        max-height: calc(100vh - var(--spacing-xl));
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: var(--spacing-md);
+    }
+    
+    .modal-lg,
+    .modal-xl {
+        max-width: 100%;
+    }
+}

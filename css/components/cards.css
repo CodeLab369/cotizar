@@ -1,0 +1,231 @@
+/**
+ * NICMAT S.R.L. - Sistema de Cotización
+ * Componente: Cards / Tarjetas
+ * @version 1.0.0
+ */
+
+/* Card base */
+.card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* Card header */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Card body */
+.card-body {
+    padding: var(--spacing-lg);
+}
+
+/* Card footer */
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    background-color: var(--color-gray-50);
+}
+
+/* Card con imagen */
+.card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Card horizontal */
+.card-horizontal {
+    display: flex;
+}
+
+.card-horizontal .card-image {
+    width: 200px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.card-horizontal .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card estadísticas */
+.stat-card {
+    padding: var(--spacing-lg);
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-card-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.stat-card-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-card-icon.success {
+    background-color: var(--color-success);
+}
+
+.stat-card-icon.warning {
+    background-color: var(--color-warning);
+}
+
+.stat-card-icon.danger {
+    background-color: var(--color-error);
+}
+
+.stat-card-icon.info {
+    background-color: var(--color-info);
+}
+
+.stat-card-value {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-card-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+}
+
+.stat-card-trend {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.stat-card-trend.positive {
+    color: var(--color-success);
+}
+
+.stat-card-trend.negative {
+    color: var(--color-error);
+}
+
+.stat-card-trend svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Card lista */
+.card-list {
+    list-style: none;
+}
+
+.card-list-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--transition-fast);
+}
+
+.card-list-item:last-child {
+    border-bottom: none;
+}
+
+.card-list-item:hover {
+    background-color: var(--color-gray-50);
+}
+
+.card-list-item-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    background-color: var(--color-gray-100);
+    color: var(--text-secondary);
+    margin-right: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.card-list-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-list-item-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+.card-list-item-subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.card-list-item-action {
+    color: var(--text-muted);
+    margin-left: var(--spacing-md);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-horizontal {
+        flex-direction: column;
+    }
+    
+    .card-horizontal .card-image {
+        width: 100%;
+        height: 200px;
+    }
+}

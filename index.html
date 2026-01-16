@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Cotización de Baterías para Vehículos - NICMAT S.R.L.">
+    <meta name="author" content="NICMAT S.R.L.">
+    <meta name="theme-color" content="#1a5f7a">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='15' fill='%23f9a825'/%3E%3Ctext x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' text-anchor='middle' fill='%231a2035'%3ENM%3C/text%3E%3C/svg%3E">
+    
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/main.css">
+    
+    <title>NICMAT S.R.L. - Sistema de Cotización</title>
+</head>
+<body>
+    <!-- Contenedor principal de la aplicación -->
+    <div id="app">
+        <!-- Loading inicial -->
+        <div class="app-loading" id="app-loading">
+            <div class="app-loading-content">
+                <div class="app-loading-logo">NM</div>
+                <div class="app-loading-text">Cargando...</div>
+                <div class="app-loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de notificaciones (se crea dinámicamente) -->
+    
+    <!-- Scripts -->
+    <script type="module" src="js/app.js"></script>
+    
+    <!-- Estilos del loading inicial (inline para carga rápida) -->
+    <style>
+        .app-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a5f7a 0%, #0d4a5f 100%);
+            z-index: 9999;
+        }
+        
+        .app-loading-content {
+            text-align: center;
+        }
+        
+        .app-loading-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f9a825, #f57f17);
+            border-radius: 16px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2035;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .app-loading-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin-bottom: 20px;
+        }
+        
+        .app-loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #f9a825;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Ocultar loading cuando la app está lista */
+        #app:not(:empty) .app-loading {
+            display: none;
+        }
+        
+        /* Ocultar loading después de que cargue el contenido */
+        .app-loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+    </style>
+    
+    <!-- Script para ocultar loading -->
+    <script>
+        // Ocultar loading cuando los módulos estén cargados
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var loading = document.getElementById('app-loading');
+                if (loading) {
+                    loading.classList.add('hidden');
+                    setTimeout(function() {
+                        loading.remove();
+                    }, 300);
+                }
+            }, 100);
+        });
+    </script>
+
+    <!-- No-script fallback -->
+    <noscript>
+        <div style="padding: 50px; text-align: center; font-family: sans-serif;">
+            <h1>JavaScript Requerido</h1>
+            <p>Este sistema requiere JavaScript para funcionar correctamente.</p>
+            <p>Por favor, habilita JavaScript en tu navegador y recarga la página.</p>
+        </div>
+    </noscript>
+</body>
+</html>

@@ -1,0 +1,274 @@
+/**
+ * NICMAT S.R.L. - Sistema de Cotización
+ * Componente: Header / Cabecera
+ * @version 1.0.0
+ */
+
+/* Header principal */
+.header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-lg);
+    height: var(--header-height);
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--border-color);
+    z-index: var(--z-sticky);
+}
+
+/* Parte izquierda del header */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.header-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.header-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.header-breadcrumb-item {
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+.header-breadcrumb-item:hover {
+    color: var(--color-primary);
+}
+
+.header-breadcrumb-separator {
+    color: var(--text-muted);
+}
+
+.header-breadcrumb-current {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Parte derecha del header */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+/* Búsqueda en header */
+.header-search {
+    position: relative;
+    width: 280px;
+}
+
+.header-search-input {
+    padding-left: 40px;
+    background-color: var(--color-gray-100);
+    border-color: transparent;
+}
+
+.header-search-input:focus {
+    background-color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.header-search-icon {
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.header-search-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Acciones del header */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.header-action-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.header-action-btn:hover {
+    background-color: var(--color-gray-100);
+    color: var(--text-primary);
+}
+
+.header-action-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.header-action-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-error);
+    border-radius: var(--border-radius-full);
+    border: 2px solid var(--color-white);
+}
+
+/* Perfil de usuario */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.header-user:hover {
+    background-color: var(--color-gray-100);
+}
+
+.header-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+}
+
+.header-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-user-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+.header-user-role {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.header-user-dropdown-icon {
+    color: var(--text-muted);
+}
+
+.header-user-dropdown-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown del usuario */
+.header-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--spacing-xs);
+    min-width: 200px;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-fast);
+    z-index: var(--z-dropdown);
+}
+
+.header-user.active .header-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.header-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.header-dropdown-item:hover {
+    background-color: var(--color-gray-50);
+    color: var(--text-primary);
+}
+
+.header-dropdown-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+.header-dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: var(--spacing-xs) 0;
+}
+
+.header-dropdown-item.danger {
+    color: var(--color-error);
+}
+
+.header-dropdown-item.danger:hover {
+    background-color: var(--color-error-bg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .header-search {
+        display: none;
+    }
+    
+    .header-user-info {
+        display: none;
+    }
+    
+    .header-title {
+        font-size: var(--font-size-lg);
+    }
+}
+
+@media (max-width: 480px) {
+    .header-breadcrumb {
+        display: none;
+    }
+}
