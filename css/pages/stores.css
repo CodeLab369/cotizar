@@ -324,6 +324,110 @@
     font-weight: var(--font-weight-semibold);
 }
 
+/* ===== VISTA DE DETALLE DE TIENDA ===== */
+
+/* Botón volver */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-bottom: var(--spacing-md);
+}
+
+.btn-back:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color-hover);
+}
+
+.btn-back svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Badge de tipo de tienda en header */
+.store-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.store-type-badge.matriz {
+    background: rgba(var(--color-warning-rgb), 0.15);
+    color: var(--color-warning);
+}
+
+.store-type-badge.sucursal {
+    background: rgba(var(--color-info-rgb), 0.15);
+    color: var(--color-info);
+}
+
+/* Contenedor de "En Desarrollo" */
+.page-development {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: var(--card-bg);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+}
+
+.page-development-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), rgba(var(--color-info-rgb), 0.1));
+    border-radius: 50%;
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-development-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--color-primary);
+}
+
+.page-development-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.page-development-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-md);
+}
+
+.page-development-text {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    max-width: 450px;
+    line-height: 1.6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stores-toolbar {
@@ -361,5 +465,34 @@
     .send-products-item-remove {
         grid-column: 2;
         grid-row: 1 / 3;
+    }
+    
+    .store-detail-content {
+        min-height: 300px;
+        padding: var(--spacing-lg);
+    }
+    
+    .store-detail-content svg {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .page-development {
+        min-height: 300px;
+        padding: var(--spacing-lg);
+    }
+    
+    .page-development-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .page-development-icon svg {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .page-development-title {
+        font-size: var(--font-size-xl);
     }
 }

@@ -26,7 +26,8 @@ const ICONS = {
     eye: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
     x: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
     login: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`,
-    tool: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`
+    tool: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
+    arrowLeft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`
 };
 
 /**
@@ -37,6 +38,8 @@ class StoresPage {
         this.container = null;
         this.stores = [];
         this.sendItems = []; // Items para envío
+        this.currentView = 'list'; // 'list' o 'detail'
+        this.currentStoreId = null;
     }
 
     /**
@@ -45,15 +48,28 @@ class StoresPage {
     render(container) {
         this.container = container;
         this.stores = Stores.getAll();
+        this.currentView = 'list';
+        this.currentStoreId = null;
 
         this.renderContent();
         this.bindEvents();
     }
 
     /**
-     * Renderiza el contenido HTML
+     * Renderiza el contenido HTML según la vista actual
      */
     renderContent() {
+        if (this.currentView === 'detail' && this.currentStoreId) {
+            this.renderStoreDetail();
+        } else {
+            this.renderStoresList();
+        }
+    }
+
+    /**
+     * Renderiza la lista de tiendas
+     */
+    renderStoresList() {
         const html = `
             <div class="page-header">
                 <div class="page-header-content">
@@ -75,6 +91,76 @@ class StoresPage {
         `;
 
         this.container.innerHTML = html;
+    }
+
+    /**
+     * Renderiza la página de detalle de una tienda
+     */
+    renderStoreDetail() {
+        const store = Stores.getById(this.currentStoreId);
+        if (!store) {
+            this.goBackToList();
+            return;
+        }
+
+        const isMatriz = store.tipo === STORE_TYPES.MATRIZ;
+
+        const html = `
+            <div class="page-header">
+                <div class="page-header-content">
+                    <button class="btn btn-ghost btn-back" id="btn-back-to-list">
+                        ${ICONS.arrowLeft}
+                        <span>Volver</span>
+                    </button>
+                    <h1 class="page-title">${store.nombre}</h1>
+                    <p class="page-description">
+                        <span class="store-type-badge ${isMatriz ? 'matriz' : 'sucursal'}">${store.tipo}</span>
+                        ${store.ciudad ? ` • ${store.ciudad}` : ''}
+                    </p>
+                </div>
+            </div>
+
+            <div class="page-development">
+                <div class="page-development-icon">
+                    ${ICONS.tool}
+                </div>
+                <h2 class="page-development-title">En Desarrollo</h2>
+                <p class="page-development-subtitle">Esta funcionalidad estará disponible próximamente</p>
+                <p class="page-development-text">Estamos trabajando para traerte la mejor experiencia de gestión para esta tienda.</p>
+            </div>
+        `;
+
+        this.container.innerHTML = html;
+        this.bindStoreDetailEvents();
+    }
+
+    /**
+     * Bindea eventos de la vista de detalle
+     */
+    bindStoreDetailEvents() {
+        document.getElementById('btn-back-to-list')?.addEventListener('click', () => {
+            this.goBackToList();
+        });
+    }
+
+    /**
+     * Vuelve a la lista de tiendas
+     */
+    goBackToList() {
+        this.currentView = 'list';
+        this.currentStoreId = null;
+        this.stores = Stores.getAll();
+        this.renderContent();
+        this.bindEvents();
+    }
+
+    /**
+     * Entra a una tienda
+     */
+    enterStore(storeId) {
+        this.currentView = 'detail';
+        this.currentStoreId = storeId;
+        this.renderContent();
     }
 
     /**
@@ -195,7 +281,7 @@ class StoresPage {
 
                 switch (action) {
                     case 'enter':
-                        this.showStoreDevelopment(id);
+                        this.enterStore(id);
                         break;
                     case 'edit':
                         this.showStoreModal(id);
