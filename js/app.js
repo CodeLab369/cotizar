@@ -39,8 +39,8 @@ class App {
         // Títulos de páginas
         this.pageTitles = {
             inventory: 'Inventario',
-            clients: 'Clientes',
-            quoter: 'Cotizador',
+            clients: 'Ventas',
+            quoter: 'Tiendas',
             settings: 'Configuraciones'
         };
     }

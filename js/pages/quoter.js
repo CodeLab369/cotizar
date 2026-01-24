@@ -1,6 +1,6 @@
 /**
  * NICMAT S.R.L. - Sistema de Cotización
- * Página: Cotizador (En desarrollo)
+ * Página: Tiendas (En desarrollo)
  * @version 1.0.0
  */
 
@@ -15,7 +15,7 @@ const ICONS = {
 };
 
 /**
- * Clase para la página de Cotizador
+ * Clase para la página de Tiendas
  */
 class QuoterPage {
     constructor() {
@@ -32,8 +32,8 @@ class QuoterPage {
         const html = `
             <div class="page-header">
                 <div class="page-header-content">
-                    <h1 class="page-title">Cotizador</h1>
-                    <p class="page-description">Genera cotizaciones para tus clientes</p>
+                    <h1 class="page-title">Tiendas</h1>
+                    <p class="page-description">Gestiona las tiendas asociadas</p>
                 </div>
             </div>
             

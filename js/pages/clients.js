@@ -1,6 +1,6 @@
 /**
  * NICMAT S.R.L. - Sistema de Cotización
- * Página: Clientes (En desarrollo)
+ * Página: Ventas (En desarrollo)
  * @version 1.0.0
  */
 
@@ -15,7 +15,7 @@ const ICONS = {
 };
 
 /**
- * Clase para la página de Clientes
+ * Clase para la página de Ventas
  */
 class ClientsPage {
     constructor() {
@@ -32,8 +32,8 @@ class ClientsPage {
         const html = `
             <div class="page-header">
                 <div class="page-header-content">
-                    <h1 class="page-title">Clientes</h1>
-                    <p class="page-description">Gestiona la información de tus clientes</p>
+                    <h1 class="page-title">Ventas</h1>
+                    <p class="page-description">Gestiona las ventas realizadas</p>
                 </div>
             </div>
             

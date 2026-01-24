@@ -75,16 +75,16 @@ class SidebarManager {
                     </li>
                     
                     <li>
-                        <a href="#" class="sidebar-menu-item" data-page="clients" data-tooltip="Clientes">
+                        <a href="#" class="sidebar-menu-item" data-page="clients" data-tooltip="Ventas">
                             <span class="sidebar-menu-item-icon">${SIDEBAR_ICONS.clients}</span>
-                            <span class="sidebar-menu-item-text">Clientes</span>
+                            <span class="sidebar-menu-item-text">Ventas</span>
                         </a>
                     </li>
                     
                     <li>
-                        <a href="#" class="sidebar-menu-item" data-page="quoter" data-tooltip="Cotizador">
+                        <a href="#" class="sidebar-menu-item" data-page="quoter" data-tooltip="Tiendas">
                             <span class="sidebar-menu-item-icon">${SIDEBAR_ICONS.quoter}</span>
-                            <span class="sidebar-menu-item-text">Cotizador</span>
+                            <span class="sidebar-menu-item-text">Tiendas</span>
                         </a>
                     </li>
                     

@@ -17,8 +17,8 @@ Sistema de cotización web para la empresa NICMAT S.R.L., dedicada a la comercia
 | Módulo | Estado |
 |--------|--------|
 | Inventario | 🔨 En desarrollo |
-| Clientes | 🔨 En desarrollo |
-| Cotizador | 🔨 En desarrollo |
+| Ventas | 🔨 En desarrollo |
+| Tiendas | 🔨 En desarrollo |
 | Configuraciones | 🔨 En desarrollo |
 
 ## 🔐 Credenciales por defecto
