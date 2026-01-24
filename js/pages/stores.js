@@ -72,7 +72,11 @@ class StoresPage {
         this.storeInvCurrentPage = 1;
         this.storeInvItemsPerPage = 5;
         this.storeInvFilters = {
-            search: ''
+            search: '',
+            marca: '',
+            amperaje: '',
+            cantidadOperador: '',
+            cantidadValor: ''
         };
         this.filteredStoreInventory = [];
     }
@@ -322,6 +326,10 @@ class StoresPage {
             `;
         }
 
+        // Obtener marcas y amperajes únicos del inventario de tienda
+        const brands = this.getStoreInvBrands(inventory);
+        const amperajes = this.getStoreInvAmperajes(inventory, this.storeInvFilters.marca);
+
         // Aplicar filtros
         this.applyStoreInvFilters(inventory);
         
@@ -338,12 +346,28 @@ class StoresPage {
         const end = start + this.storeInvItemsPerPage;
         const pageData = this.filteredStoreInventory.slice(start, end);
         
-        // Calcular totales de TODO el inventario (no solo la página)
+        // Calcular totales de TODO el inventario (para comparación)
         const totals = {
             cantidad: inventory.reduce((s, i) => s + i.cantidad, 0),
             costoTotal: inventory.reduce((s, i) => s + (i.costo * i.cantidad), 0),
             valorVenta: inventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0)
         };
+
+        // Calcular totales filtrados
+        const filteredTotals = {
+            cantidad: this.filteredStoreInventory.reduce((s, i) => s + i.cantidad, 0),
+            costoTotal: this.filteredStoreInventory.reduce((s, i) => s + (i.costo * i.cantidad), 0),
+            valorVenta: this.filteredStoreInventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0)
+        };
+
+        // Verificar si hay filtros activos
+        const hasFilters = this.storeInvFilters.search || 
+                          this.storeInvFilters.marca || 
+                          this.storeInvFilters.amperaje || 
+                          (this.storeInvFilters.cantidadOperador && this.storeInvFilters.cantidadValor !== '');
+
+        // Actualizar estadísticas en la cabecera
+        this.updateStoreInvStats(store, hasFilters, filteredTotals);
 
         return `
             <!-- Toolbar de búsqueda -->
@@ -364,6 +388,40 @@ class StoresPage {
                         <option value="500" ${this.storeInvItemsPerPage === 500 ? 'selected' : ''}>500</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="table-filters">
+                <div class="filter-group">
+                    <label>Marca:</label>
+                    <select id="store-inv-filter-marca">
+                        <option value="">Todas</option>
+                        ${brands.map(b => `<option value="${b}" ${this.storeInvFilters.marca === b ? 'selected' : ''}>${b}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Amperaje:</label>
+                    <select id="store-inv-filter-amperaje">
+                        <option value="">Todos</option>
+                        ${amperajes.map(a => `<option value="${a}" ${this.storeInvFilters.amperaje === a ? 'selected' : ''}>${a}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Cantidad:</label>
+                    <select id="store-inv-filter-cantidad-op" class="filter-operator">
+                        <option value="" ${this.storeInvFilters.cantidadOperador === '' ? 'selected' : ''}>--</option>
+                        <option value="=" ${this.storeInvFilters.cantidadOperador === '=' ? 'selected' : ''}>=</option>
+                        <option value=">" ${this.storeInvFilters.cantidadOperador === '>' ? 'selected' : ''}>&gt;</option>
+                        <option value="<" ${this.storeInvFilters.cantidadOperador === '<' ? 'selected' : ''}>&lt;</option>
+                        <option value=">=" ${this.storeInvFilters.cantidadOperador === '>=' ? 'selected' : ''}>&ge;</option>
+                        <option value="<=" ${this.storeInvFilters.cantidadOperador === '<=' ? 'selected' : ''}>&le;</option>
+                    </select>
+                    <input type="number" id="store-inv-filter-cantidad-val" placeholder="Valor" min="0" value="${this.storeInvFilters.cantidadValor}">
+                </div>
+                <button class="btn btn-ghost btn-sm btn-clear-filters" id="store-inv-clear-filters">
+                    ${ICONS.x}
+                    <span>Limpiar filtros</span>
+                </button>
             </div>
 
             <div class="table-wrapper">
@@ -412,12 +470,12 @@ class StoresPage {
                     </tbody>
                     <tfoot>
                         <tr class="totals-row">
-                            <td colspan="2"><strong>TOTALES</strong></td>
-                            <td class="col-number"><strong>${totals.cantidad}</strong></td>
+                            <td colspan="2"><strong>TOTALES${hasFilters ? ' (Filtrado)' : ''}</strong></td>
+                            <td class="col-number"><strong>${hasFilters ? filteredTotals.cantidad : totals.cantidad}</strong></td>
                             <td></td>
                             <td></td>
-                            <td class="col-currency"><strong>${Currency.format(totals.costoTotal)}</strong></td>
-                            <td class="col-currency"><strong>${Currency.format(totals.valorVenta)}</strong></td>
+                            <td class="col-currency"><strong>${Currency.format(hasFilters ? filteredTotals.costoTotal : totals.costoTotal)}</strong></td>
+                            <td class="col-currency"><strong>${Currency.format(hasFilters ? filteredTotals.valorVenta : totals.valorVenta)}</strong></td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -429,6 +487,55 @@ class StoresPage {
                 ${this.renderStoreInvPagination(totalItems, totalPages)}
             </div>
         `;
+    }
+
+    /**
+     * Obtiene las marcas únicas del inventario de tienda
+     */
+    getStoreInvBrands(inventory) {
+        const brands = [...new Set(inventory.map(item => item.marca))];
+        return brands.sort();
+    }
+
+    /**
+     * Obtiene los amperajes únicos del inventario de tienda (filtrado por marca si aplica)
+     */
+    getStoreInvAmperajes(inventory, marca = null) {
+        let items = inventory;
+        if (marca) {
+            items = inventory.filter(item => item.marca === marca);
+        }
+        const amperajes = [...new Set(items.map(item => item.amperaje))];
+        return amperajes.sort();
+    }
+
+    /**
+     * Actualiza las estadísticas del inventario de tienda cuando hay filtros
+     */
+    updateStoreInvStats(store, hasFilters, filteredTotals) {
+        const totalStats = this.getStoreStats(store);
+        
+        const statProducts = document.getElementById('store-stat-products');
+        const statUnits = document.getElementById('store-stat-units');
+        const statCost = document.getElementById('store-stat-cost');
+
+        if (hasFilters) {
+            // Mostrar stats filtradas con indicador
+            if (statProducts) {
+                statProducts.innerHTML = `${this.filteredStoreInventory.length} <span class="stat-filtered-indicator">de ${totalStats.totalProductos}</span>`;
+            }
+            if (statUnits) {
+                statUnits.innerHTML = `${filteredTotals.cantidad} <span class="stat-filtered-indicator">de ${totalStats.totalUnidades}</span>`;
+            }
+            if (statCost) {
+                statCost.innerHTML = `${Currency.format(filteredTotals.costoTotal)} <span class="stat-filtered-indicator">de ${Currency.format(totalStats.costoTotal)}</span>`;
+            }
+        } else {
+            // Mostrar stats totales normales
+            if (statProducts) statProducts.textContent = totalStats.totalProductos;
+            if (statUnits) statUnits.textContent = totalStats.totalUnidades;
+            if (statCost) statCost.textContent = Currency.format(totalStats.costoTotal);
+        }
     }
 
     /**
@@ -444,6 +551,33 @@ class StoresPage {
                 item.marca.toLowerCase().includes(search) ||
                 item.amperaje.toLowerCase().includes(search)
             );
+        }
+
+        // Filtrar por marca
+        if (this.storeInvFilters.marca) {
+            filtered = filtered.filter(item => item.marca === this.storeInvFilters.marca);
+        }
+
+        // Filtrar por amperaje
+        if (this.storeInvFilters.amperaje) {
+            filtered = filtered.filter(item => item.amperaje === this.storeInvFilters.amperaje);
+        }
+
+        // Filtrar por cantidad
+        if (this.storeInvFilters.cantidadOperador && this.storeInvFilters.cantidadValor !== '') {
+            const valor = parseInt(this.storeInvFilters.cantidadValor);
+            const op = this.storeInvFilters.cantidadOperador;
+            
+            filtered = filtered.filter(item => {
+                switch (op) {
+                    case '=': return item.cantidad === valor;
+                    case '>': return item.cantidad > valor;
+                    case '<': return item.cantidad < valor;
+                    case '>=': return item.cantidad >= valor;
+                    case '<=': return item.cantidad <= valor;
+                    default: return true;
+                }
+            });
         }
 
         this.filteredStoreInventory = filtered;
@@ -971,6 +1105,40 @@ class StoresPage {
             this.refreshStoreInventory();
         }, 300));
 
+        // Filtro de marca
+        document.getElementById('store-inv-filter-marca')?.addEventListener('change', (e) => {
+            this.storeInvFilters.marca = e.target.value;
+            this.storeInvFilters.amperaje = ''; // Resetear amperaje al cambiar marca
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        });
+
+        // Filtro de amperaje
+        document.getElementById('store-inv-filter-amperaje')?.addEventListener('change', (e) => {
+            this.storeInvFilters.amperaje = e.target.value;
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        });
+
+        // Filtro de cantidad (operador)
+        document.getElementById('store-inv-filter-cantidad-op')?.addEventListener('change', (e) => {
+            this.storeInvFilters.cantidadOperador = e.target.value;
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        });
+
+        // Filtro de cantidad (valor)
+        document.getElementById('store-inv-filter-cantidad-val')?.addEventListener('input', debounce((e) => {
+            this.storeInvFilters.cantidadValor = e.target.value;
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        }, 300));
+
+        // Limpiar filtros
+        document.getElementById('store-inv-clear-filters')?.addEventListener('click', () => {
+            this.clearStoreInvFilters();
+        });
+
         // Items por página
         document.getElementById('store-inv-items-per-page')?.addEventListener('change', (e) => {
             this.storeInvItemsPerPage = parseInt(e.target.value);
@@ -1002,6 +1170,21 @@ class StoresPage {
                 this.refreshStoreInventory();
             });
         });
+    }
+
+    /**
+     * Limpia los filtros del inventario de tienda
+     */
+    clearStoreInvFilters() {
+        this.storeInvFilters = {
+            search: '',
+            marca: '',
+            amperaje: '',
+            cantidadOperador: '',
+            cantidadValor: ''
+        };
+        this.storeInvCurrentPage = 1;
+        this.refreshStoreInventory();
     }
 
     /**
