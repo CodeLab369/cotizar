@@ -783,6 +783,47 @@
     color: var(--color-primary);
 }
 
+/* Modal de devolución */
+.return-confirm {
+    text-align: left;
+}
+
+.return-confirm p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.return-confirm-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+}
+
+.return-confirm-item strong {
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+}
+
+.return-confirm-item span {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.return-confirm-note {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 0 !important;
+}
+
+.send-confirm-total strong {
+    color: var(--color-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stores-toolbar {

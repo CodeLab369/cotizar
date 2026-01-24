@@ -306,7 +306,7 @@ class StoresPage {
 
         return `
             <div class="table-wrapper">
-                <table class="data-table">
+                <table class="data-table" id="store-inventory-table">
                     <thead>
                         <tr>
                             <th>Marca</th>
@@ -316,11 +316,12 @@ class StoresPage {
                             <th class="col-currency">Precio Venta</th>
                             <th class="col-currency">Costo Total</th>
                             <th class="col-currency">Valor Venta</th>
+                            <th class="col-actions">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${inventory.map(item => `
-                            <tr>
+                            <tr data-product-id="${item.productId}">
                                 <td>${item.marca}</td>
                                 <td>${item.amperaje}</td>
                                 <td class="col-number">${item.cantidad}</td>
@@ -328,6 +329,13 @@ class StoresPage {
                                 <td class="col-currency">${Currency.format(item.precioVenta)}</td>
                                 <td class="col-currency">${Currency.format(item.costo * item.cantidad)}</td>
                                 <td class="col-currency">${Currency.format(item.precioVenta * item.cantidad)}</td>
+                                <td class="col-actions">
+                                    <div class="row-actions">
+                                        <button class="row-action-btn delete" title="Devolver a Inventario" data-action="return" data-product-id="${item.productId}">
+                                            ${ICONS.trash}
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -339,6 +347,7 @@ class StoresPage {
                             <td></td>
                             <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.costo * i.cantidad), 0))}</strong></td>
                             <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0))}</strong></td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -746,8 +755,84 @@ class StoresPage {
                 const container = document.querySelector('.store-inventory-container');
                 if (container) {
                     container.innerHTML = this.renderStoreInventoryTable(store);
+                    this.bindStoreInventoryEvents();
                 }
             }
+        }
+    }
+
+    /**
+     * Vincula eventos de la tabla de inventario de tienda
+     */
+    bindStoreInventoryEvents() {
+        const table = document.getElementById('store-inventory-table');
+        if (!table) return;
+
+        table.querySelectorAll('[data-action="return"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const productId = btn.dataset.productId;
+                this.confirmReturnProduct(productId);
+            });
+        });
+    }
+
+    /**
+     * Confirma la devolución de un producto al inventario
+     */
+    confirmReturnProduct(productId) {
+        const store = Stores.getById(this.currentStoreId);
+        if (!store) return;
+
+        const item = store.inventory?.find(i => i.productId === productId);
+        if (!item) return;
+
+        Modal.confirm({
+            title: 'Devolver a Inventario',
+            message: `
+                <div class="return-confirm">
+                    <p>¿Estás seguro de devolver este producto al inventario principal?</p>
+                    <div class="return-confirm-item">
+                        <strong>${item.marca} ${item.amperaje}</strong>
+                        <span>Cantidad: ${item.cantidad} unidades</span>
+                    </div>
+                    <p class="return-confirm-note">El producto se agregará de vuelta al inventario principal.</p>
+                </div>
+            `,
+            confirmText: 'Devolver',
+            cancelText: 'Cancelar',
+            type: 'warning',
+            onConfirm: () => this.executeReturnProduct(productId)
+        });
+    }
+
+    /**
+     * Ejecuta la devolución de un producto
+     */
+    executeReturnProduct(productId) {
+        try {
+            const result = Stores.returnProduct(this.currentStoreId, productId);
+            
+            Notifications.success(`Se devolvieron ${result.cantidad} unidades de ${result.producto} al inventario`);
+            
+            // Refrescar datos
+            const store = Stores.getById(this.currentStoreId);
+            if (store) {
+                this.storeInventory = store.inventory || [];
+                this.updateStoreStats(store);
+                
+                // Refrescar tabla de inventario de tienda
+                const container = document.querySelector('.store-inventory-container');
+                if (container) {
+                    container.innerHTML = this.renderStoreInventoryTable(store);
+                    this.bindStoreInventoryEvents();
+                }
+            }
+            
+            // Refrescar inventario principal para envíos
+            this.mainInventory = Inventory.getAll();
+            
+        } catch (error) {
+            Notifications.error(error.message);
         }
     }
 

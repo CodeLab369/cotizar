@@ -273,6 +273,94 @@ class StoresService {
     }
 
     /**
+     * Devuelve productos de una tienda al inventario principal
+     * @param {string} storeId
+     * @param {string} productId
+     * @param {number} cantidad - Cantidad a devolver (si no se especifica, devuelve todo)
+     * @returns {Object} Información de la devolución
+     */
+    returnProduct(storeId, productId, cantidad = null) {
+        const stores = this.getAll();
+        const storeIndex = stores.findIndex(s => s.id === storeId);
+        
+        if (storeIndex === -1) {
+            throw new Error('Tienda no encontrada');
+        }
+
+        const store = stores[storeIndex];
+        if (!store.inventory) store.inventory = [];
+
+        const itemIndex = store.inventory.findIndex(i => i.productId === productId);
+        if (itemIndex === -1) {
+            throw new Error('Producto no encontrado en la tienda');
+        }
+
+        const storeItem = store.inventory[itemIndex];
+        const cantidadADevolver = cantidad !== null ? Math.min(cantidad, storeItem.cantidad) : storeItem.cantidad;
+
+        if (cantidadADevolver <= 0) {
+            throw new Error('Cantidad inválida');
+        }
+
+        // Devolver al inventario principal
+        const mainProduct = Inventory.getById(productId);
+        if (mainProduct) {
+            Inventory.update(productId, {
+                marca: mainProduct.marca,
+                amperaje: mainProduct.amperaje,
+                cantidad: mainProduct.cantidad + cantidadADevolver,
+                costo: mainProduct.costo,
+                precioVenta: mainProduct.precioVenta
+            });
+        } else {
+            // Si el producto ya no existe en inventario principal, recrearlo
+            Inventory.add({
+                marca: storeItem.marca,
+                amperaje: storeItem.amperaje,
+                cantidad: cantidadADevolver,
+                costo: storeItem.costo,
+                precioVenta: storeItem.precioVenta
+            });
+        }
+
+        // Actualizar inventario de la tienda
+        if (cantidadADevolver >= storeItem.cantidad) {
+            // Eliminar completamente
+            store.inventory.splice(itemIndex, 1);
+        } else {
+            // Reducir cantidad
+            store.inventory[itemIndex].cantidad -= cantidadADevolver;
+        }
+
+        stores[storeIndex] = store;
+        Storage.set(STORAGE_KEY, stores);
+
+        // Registrar transferencia de devolución
+        const transfer = {
+            id: generateId(),
+            storeId,
+            storeName: store.nombre,
+            items: [{
+                productId,
+                marca: storeItem.marca,
+                amperaje: storeItem.amperaje,
+                cantidad: cantidadADevolver
+            }],
+            totalUnidades: cantidadADevolver,
+            date: Date.now(),
+            tipo: 'devolucion'
+        };
+
+        this.saveTransfer(transfer);
+
+        return {
+            producto: `${storeItem.marca} ${storeItem.amperaje}`,
+            cantidad: cantidadADevolver,
+            transfer
+        };
+    }
+
+    /**
      * Obtiene estadísticas
      * @returns {Object}
      */
