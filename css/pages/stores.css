@@ -820,7 +820,28 @@
     margin-bottom: 0 !important;
 }
 
-.send-confirm-total strong {
+/* Modal de confirmación de eliminación con inventario */
+.confirm-warning-box {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(var(--color-warning-rgb), 0.1);
+    border: 1px solid rgba(var(--color-warning-rgb), 0.3);
+    border-radius: var(--border-radius);
+}
+
+.confirm-warning-box .confirm-warning {
+    color: var(--color-warning);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-xs);
+}
+
+.confirm-warning-box .confirm-warning-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+.confirm-warning-box .confirm-warning-info strong {
     color: var(--color-primary);
 }
 

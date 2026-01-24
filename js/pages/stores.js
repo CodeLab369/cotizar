@@ -1217,22 +1217,34 @@ class StoresPage {
      * Confirma eliminación de tienda
      */
     confirmDeleteStore(storeId) {
+        // Obtener datos frescos de la tienda
         const store = Stores.getById(storeId);
         if (!store) return;
 
-        const totalUnidades = (store.inventory || []).reduce((sum, item) => sum + item.cantidad, 0);
+        const inventory = store.inventory || [];
+        const totalProductos = inventory.length;
+        const totalUnidades = inventory.reduce((sum, item) => sum + item.cantidad, 0);
 
-        const content = `
+        let content = `
             <div class="confirm-delete">
                 <p>¿Estás seguro de eliminar esta tienda?</p>
                 <div class="confirm-details">
                     <div><strong>Nombre:</strong> ${store.nombre}</div>
                     <div><strong>Tipo:</strong> ${store.tipo}</div>
-                    <div><strong>Inventario:</strong> ${totalUnidades} unidades</div>
+                    <div><strong>Inventario:</strong> ${totalUnidades} unidades (${totalProductos} productos)</div>
                 </div>
-                ${totalUnidades > 0 ? '<p class="confirm-warning">Esta tienda tiene inventario. Debes transferirlo primero.</p>' : ''}
-            </div>
         `;
+
+        if (totalUnidades > 0) {
+            content += `
+                <div class="confirm-warning-box">
+                    <p class="confirm-warning">⚠️ Esta tienda tiene inventario.</p>
+                    <p class="confirm-warning-info">Al eliminar, se devolverán <strong>${totalUnidades} unidades</strong> al inventario principal automáticamente.</p>
+                </div>
+            `;
+        }
+
+        content += `</div>`;
 
         const modalId = Modal.open({
             title: 'Eliminar Tienda',
@@ -1241,7 +1253,7 @@ class StoresPage {
             showFooter: true,
             footerContent: `
                 <button class="btn btn-ghost" id="btn-cancel-delete">Cancelar</button>
-                <button class="btn btn-danger" id="btn-confirm-delete" ${totalUnidades > 0 ? 'disabled' : ''}>Eliminar</button>
+                <button class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
             `
         });
 
@@ -1251,8 +1263,25 @@ class StoresPage {
 
         document.getElementById('btn-confirm-delete')?.addEventListener('click', () => {
             try {
+                // Si tiene inventario, devolver todo primero
+                if (totalUnidades > 0) {
+                    const storeData = Stores.getById(storeId);
+                    if (storeData && storeData.inventory) {
+                        // Devolver cada producto
+                        const productIds = storeData.inventory.map(item => item.productId);
+                        for (const productId of productIds) {
+                            try {
+                                Stores.returnProduct(storeId, productId);
+                            } catch (e) {
+                                console.error('Error devolviendo producto:', e);
+                            }
+                        }
+                    }
+                }
+
+                // Ahora eliminar la tienda
                 Stores.delete(storeId);
-                Notifications.success('Tienda eliminada correctamente');
+                Notifications.success(`Tienda eliminada correctamente${totalUnidades > 0 ? `. Se devolvieron ${totalUnidades} unidades al inventario.` : ''}`);
                 this.stores = Stores.getAll();
                 this.renderContent();
                 this.bindEvents();
