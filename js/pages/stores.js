@@ -907,8 +907,11 @@ class StoresPage {
             message: summaryHtml,
             confirmText: 'Enviar Productos',
             cancelText: 'Cancelar',
-            type: 'primary',
-            onConfirm: () => this.executeSendProducts()
+            type: 'warning'
+        }).then((confirmed) => {
+            if (confirmed) {
+                this.executeSendProducts();
+            }
         });
     }
 
