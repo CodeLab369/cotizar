@@ -58,13 +58,23 @@ class StoresPage {
         this.storeInventory = [];
         this.mainInventory = [];
         this.selectedProducts = new Map(); // productId -> cantidad a enviar
+        
+        // Paginación para Enviar Productos
         this.detailCurrentPage = 1;
-        this.detailItemsPerPage = 10;
+        this.detailItemsPerPage = 5;
         this.detailFilters = {
             search: '',
             marca: ''
         };
         this.filteredMainInventory = [];
+        
+        // Paginación para Inventario de Tienda
+        this.storeInvCurrentPage = 1;
+        this.storeInvItemsPerPage = 5;
+        this.storeInvFilters = {
+            search: ''
+        };
+        this.filteredStoreInventory = [];
     }
 
     /**
@@ -225,6 +235,14 @@ class StoresPage {
                                 </select>
                             </div>
                             <div class="table-toolbar-right">
+                                <span class="toolbar-label">Mostrar:</span>
+                                <select id="send-items-per-page" class="pagination-select">
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                    <option value="500">500</option>
+                                </select>
                                 <button class="btn btn-primary" id="btn-send-selected" disabled>
                                     ${ICONS.send}
                                     <span>Enviar Seleccionados (<span id="selected-count">0</span>)</span>
@@ -304,7 +322,50 @@ class StoresPage {
             `;
         }
 
+        // Aplicar filtros
+        this.applyStoreInvFilters(inventory);
+        
+        // Calcular paginación
+        const totalItems = this.filteredStoreInventory.length;
+        const totalPages = Math.ceil(totalItems / this.storeInvItemsPerPage);
+        
+        // Validar página actual
+        if (this.storeInvCurrentPage > totalPages) {
+            this.storeInvCurrentPage = Math.max(1, totalPages);
+        }
+        
+        const start = (this.storeInvCurrentPage - 1) * this.storeInvItemsPerPage;
+        const end = start + this.storeInvItemsPerPage;
+        const pageData = this.filteredStoreInventory.slice(start, end);
+        
+        // Calcular totales de TODO el inventario (no solo la página)
+        const totals = {
+            cantidad: inventory.reduce((s, i) => s + i.cantidad, 0),
+            costoTotal: inventory.reduce((s, i) => s + (i.costo * i.cantidad), 0),
+            valorVenta: inventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0)
+        };
+
         return `
+            <!-- Toolbar de búsqueda -->
+            <div class="table-toolbar">
+                <div class="table-toolbar-left">
+                    <div class="table-search">
+                        <span class="table-search-icon">${ICONS.search}</span>
+                        <input type="text" class="table-search-input" id="store-inv-search-input" placeholder="Buscar por marca o amperaje..." value="${this.storeInvFilters.search}">
+                    </div>
+                </div>
+                <div class="table-toolbar-right">
+                    <span class="toolbar-label">Mostrar:</span>
+                    <select id="store-inv-items-per-page" class="pagination-select">
+                        <option value="5" ${this.storeInvItemsPerPage === 5 ? 'selected' : ''}>5</option>
+                        <option value="10" ${this.storeInvItemsPerPage === 10 ? 'selected' : ''}>10</option>
+                        <option value="50" ${this.storeInvItemsPerPage === 50 ? 'selected' : ''}>50</option>
+                        <option value="100" ${this.storeInvItemsPerPage === 100 ? 'selected' : ''}>100</option>
+                        <option value="500" ${this.storeInvItemsPerPage === 500 ? 'selected' : ''}>500</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="table-wrapper">
                 <table class="data-table" id="store-inventory-table">
                     <thead>
@@ -320,7 +381,17 @@ class StoresPage {
                         </tr>
                     </thead>
                     <tbody>
-                        ${inventory.map(item => `
+                        ${pageData.length === 0 ? `
+                            <tr>
+                                <td colspan="8">
+                                    <div class="table-empty">
+                                        <div class="table-empty-icon">${ICONS.emptyBox}</div>
+                                        <div class="table-empty-title">Sin resultados</div>
+                                        <div class="table-empty-text">No se encontraron productos con los filtros aplicados</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        ` : pageData.map(item => `
                             <tr data-product-id="${item.productId}">
                                 <td>${item.marca}</td>
                                 <td>${item.amperaje}</td>
@@ -342,15 +413,84 @@ class StoresPage {
                     <tfoot>
                         <tr class="totals-row">
                             <td colspan="2"><strong>TOTALES</strong></td>
-                            <td class="col-number"><strong>${inventory.reduce((s, i) => s + i.cantidad, 0)}</strong></td>
+                            <td class="col-number"><strong>${totals.cantidad}</strong></td>
                             <td></td>
                             <td></td>
-                            <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.costo * i.cantidad), 0))}</strong></td>
-                            <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0))}</strong></td>
+                            <td class="col-currency"><strong>${Currency.format(totals.costoTotal)}</strong></td>
+                            <td class="col-currency"><strong>${Currency.format(totals.valorVenta)}</strong></td>
                             <td></td>
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="table-pagination" id="store-inv-pagination">
+                ${this.renderStoreInvPagination(totalItems, totalPages)}
+            </div>
+        `;
+    }
+
+    /**
+     * Aplica filtros al inventario de tienda
+     */
+    applyStoreInvFilters(inventory) {
+        let filtered = [...inventory];
+
+        // Filtrar por búsqueda
+        if (this.storeInvFilters.search) {
+            const search = this.storeInvFilters.search.toLowerCase();
+            filtered = filtered.filter(item => 
+                item.marca.toLowerCase().includes(search) ||
+                item.amperaje.toLowerCase().includes(search)
+            );
+        }
+
+        this.filteredStoreInventory = filtered;
+    }
+
+    /**
+     * Renderiza la paginación del inventario de tienda
+     */
+    renderStoreInvPagination(totalItems, totalPages) {
+        if (totalPages <= 1) {
+            return '';
+        }
+
+        const startItem = (this.storeInvCurrentPage - 1) * this.storeInvItemsPerPage + 1;
+        const endItem = Math.min(this.storeInvCurrentPage * this.storeInvItemsPerPage, totalItems);
+
+        // Generar botones de página
+        let pagesHtml = '';
+        let startPage = Math.max(1, this.storeInvCurrentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagesHtml += `
+                <button class="pagination-btn ${i === this.storeInvCurrentPage ? 'active' : ''}" data-page="${i}">
+                    ${i}
+                </button>
+            `;
+        }
+
+        return `
+            <div class="pagination-info">
+                Mostrando ${startItem} - ${endItem} de ${totalItems} productos
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="store-inv-prev" ${this.storeInvCurrentPage === 1 ? 'disabled' : ''}>
+                    ${ICONS.chevronLeft}
+                </button>
+                <div class="pagination-pages" id="store-inv-pages">
+                    ${pagesHtml}
+                </div>
+                <button class="pagination-btn" id="store-inv-next" ${this.storeInvCurrentPage === totalPages ? 'disabled' : ''}>
+                    ${ICONS.chevronRight}
+                </button>
             </div>
         `;
     }
@@ -667,15 +807,34 @@ class StoresPage {
         const startItem = (this.detailCurrentPage - 1) * this.detailItemsPerPage + 1;
         const endItem = Math.min(this.detailCurrentPage * this.detailItemsPerPage, totalItems);
 
+        // Generar botones de página
+        let pagesHtml = '';
+        let startPage = Math.max(1, this.detailCurrentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagesHtml += `
+                <button class="pagination-btn ${i === this.detailCurrentPage ? 'active' : ''}" data-page="${i}">
+                    ${i}
+                </button>
+            `;
+        }
+
         container.innerHTML = `
             <div class="pagination-info">
-                Mostrando ${startItem}-${endItem} de ${totalItems} productos
+                Mostrando ${startItem} - ${endItem} de ${totalItems} productos
             </div>
             <div class="pagination-controls">
                 <button class="pagination-btn" id="prev-page" ${this.detailCurrentPage === 1 ? 'disabled' : ''}>
                     ${ICONS.chevronLeft}
                 </button>
-                <span class="pagination-current">Página ${this.detailCurrentPage} de ${totalPages}</span>
+                <div class="pagination-pages" id="send-pagination-pages">
+                    ${pagesHtml}
+                </div>
                 <button class="pagination-btn" id="next-page" ${this.detailCurrentPage === totalPages ? 'disabled' : ''}>
                     ${ICONS.chevronRight}
                 </button>
@@ -697,6 +856,15 @@ class StoresPage {
                 this.renderSendProductsTable();
                 this.renderSendPagination();
             }
+        });
+
+        // Bind eventos de páginas numeradas
+        document.querySelectorAll('#send-pagination-pages .pagination-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.detailCurrentPage = parseInt(btn.dataset.page);
+                this.renderSendProductsTable();
+                this.renderSendPagination();
+            });
         });
     }
 
@@ -728,6 +896,13 @@ class StoresPage {
         // Filtro de marca
         document.getElementById('send-filter-marca')?.addEventListener('change', (e) => {
             this.detailFilters.marca = e.target.value;
+            this.detailCurrentPage = 1;
+            this.loadSendProductsTable();
+        });
+
+        // Items por página (Enviar Productos)
+        document.getElementById('send-items-per-page')?.addEventListener('change', (e) => {
+            this.detailItemsPerPage = parseInt(e.target.value);
             this.detailCurrentPage = 1;
             this.loadSendProductsTable();
         });
@@ -774,15 +949,73 @@ class StoresPage {
      * Vincula eventos de la tabla de inventario de tienda
      */
     bindStoreInventoryEvents() {
-        const table = document.getElementById('store-inventory-table');
-        if (!table) return;
+        const store = Stores.getById(this.currentStoreId);
+        if (!store) return;
 
-        table.querySelectorAll('[data-action="return"]').forEach(btn => {
+        // Eventos de botones de devolver
+        const table = document.getElementById('store-inventory-table');
+        if (table) {
+            table.querySelectorAll('[data-action="return"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const productId = btn.dataset.productId;
+                    this.confirmReturnProduct(productId);
+                });
+            });
+        }
+
+        // Búsqueda en inventario de tienda
+        const searchInput = document.getElementById('store-inv-search-input');
+        searchInput?.addEventListener('input', debounce((e) => {
+            this.storeInvFilters.search = e.target.value;
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        }, 300));
+
+        // Items por página
+        document.getElementById('store-inv-items-per-page')?.addEventListener('change', (e) => {
+            this.storeInvItemsPerPage = parseInt(e.target.value);
+            this.storeInvCurrentPage = 1;
+            this.refreshStoreInventory();
+        });
+
+        // Paginación
+        document.getElementById('store-inv-prev')?.addEventListener('click', () => {
+            if (this.storeInvCurrentPage > 1) {
+                this.storeInvCurrentPage--;
+                this.refreshStoreInventory();
+            }
+        });
+
+        document.getElementById('store-inv-next')?.addEventListener('click', () => {
+            const totalItems = this.filteredStoreInventory.length;
+            const totalPages = Math.ceil(totalItems / this.storeInvItemsPerPage);
+            if (this.storeInvCurrentPage < totalPages) {
+                this.storeInvCurrentPage++;
+                this.refreshStoreInventory();
+            }
+        });
+
+        // Botones de páginas numeradas
+        document.querySelectorAll('#store-inv-pages .pagination-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const productId = btn.dataset.productId;
-                this.confirmReturnProduct(productId);
+                this.storeInvCurrentPage = parseInt(btn.dataset.page);
+                this.refreshStoreInventory();
             });
         });
+    }
+
+    /**
+     * Refresca la tabla de inventario de tienda
+     */
+    refreshStoreInventory() {
+        const store = Stores.getById(this.currentStoreId);
+        if (store) {
+            const container = document.querySelector('.store-inventory-container');
+            if (container) {
+                container.innerHTML = this.renderStoreInventoryTable(store);
+                this.bindStoreInventoryEvents();
+            }
+        }
     }
 
     /**
@@ -809,8 +1042,11 @@ class StoresPage {
             `,
             confirmText: 'Devolver',
             cancelText: 'Cancelar',
-            type: 'warning',
-            onConfirm: () => this.executeReturnProduct(productId)
+            type: 'warning'
+        }).then((confirmed) => {
+            if (confirmed) {
+                this.executeReturnProduct(productId);
+            }
         });
     }
 
@@ -830,11 +1066,7 @@ class StoresPage {
                 this.updateStoreStats(store);
                 
                 // Refrescar tabla de inventario de tienda
-                const container = document.querySelector('.store-inventory-container');
-                if (container) {
-                    container.innerHTML = this.renderStoreInventoryTable(store);
-                    this.bindStoreInventoryEvents();
-                }
+                this.refreshStoreInventory();
             }
             
             // Refrescar inventario principal para envíos

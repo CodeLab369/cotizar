@@ -940,3 +940,10 @@
         width: 40px;
     }
 }
+
+/* Toolbar label */
+.toolbar-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
