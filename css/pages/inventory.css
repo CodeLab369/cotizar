@@ -69,6 +69,24 @@
     line-height: 1.2;
 }
 
+/* Indicador de filtrado en stats */
+.stat-filtered-indicator {
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.inventory-stats.is-filtered .inventory-stat-card {
+    position: relative;
+    border-left: 3px solid var(--color-primary);
+}
+
+.inventory-stats.is-filtered .inventory-stat-value {
+    color: var(--color-primary);
+}
+
 .inventory-stat-label {
     font-size: var(--font-size-sm);
     color: var(--text-muted);

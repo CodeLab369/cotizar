@@ -380,15 +380,51 @@ class InventoryPage {
     }
 
     /**
-     * Actualiza las estadísticas
+     * Actualiza las estadísticas basadas en los datos filtrados
      */
     updateStats() {
-        const stats = Inventory.getStats();
-        
-        document.getElementById('stat-products').textContent = stats.totalProductos;
-        document.getElementById('stat-units').textContent = stats.totalUnidades;
-        document.getElementById('stat-cost').textContent = Currency.format(stats.costoTotalInventario);
-        document.getElementById('stat-value').textContent = Currency.format(stats.valorVentaTotal);
+        // Verificar si hay filtros activos
+        const hasFilters = this.filters.search || 
+                          this.filters.marca || 
+                          this.filters.amperaje || 
+                          (this.filters.cantidadOperador && this.filters.cantidadValor !== '');
+
+        // Calcular stats de los datos filtrados
+        const filteredStats = {
+            totalProductos: this.filteredData.length,
+            totalUnidades: this.filteredData.reduce((sum, item) => sum + item.cantidad, 0),
+            costoTotalInventario: this.filteredData.reduce((sum, item) => sum + item.costoTotal, 0),
+            valorVentaTotal: this.filteredData.reduce((sum, item) => sum + item.costoVenta, 0)
+        };
+
+        // Stats totales para comparación
+        const totalStats = Inventory.getStats();
+
+        // Actualizar valores
+        const statProducts = document.getElementById('stat-products');
+        const statUnits = document.getElementById('stat-units');
+        const statCost = document.getElementById('stat-cost');
+        const statValue = document.getElementById('stat-value');
+
+        if (hasFilters) {
+            // Mostrar stats filtradas con indicador
+            statProducts.innerHTML = `${filteredStats.totalProductos} <span class="stat-filtered-indicator">de ${totalStats.totalProductos}</span>`;
+            statUnits.innerHTML = `${filteredStats.totalUnidades} <span class="stat-filtered-indicator">de ${totalStats.totalUnidades}</span>`;
+            statCost.innerHTML = `${Currency.format(filteredStats.costoTotalInventario)} <span class="stat-filtered-indicator">de ${Currency.format(totalStats.costoTotalInventario)}</span>`;
+            statValue.innerHTML = `${Currency.format(filteredStats.valorVentaTotal)} <span class="stat-filtered-indicator">de ${Currency.format(totalStats.valorVentaTotal)}</span>`;
+
+            // Agregar clase para indicar filtrado
+            document.getElementById('inventory-stats')?.classList.add('is-filtered');
+        } else {
+            // Mostrar stats totales normales
+            statProducts.textContent = totalStats.totalProductos;
+            statUnits.textContent = totalStats.totalUnidades;
+            statCost.textContent = Currency.format(totalStats.costoTotalInventario);
+            statValue.textContent = Currency.format(totalStats.valorVentaTotal);
+
+            // Quitar clase de filtrado
+            document.getElementById('inventory-stats')?.classList.remove('is-filtered');
+        }
     }
 
     /**
