@@ -1,0 +1,220 @@
+/**
+ * NICMAT S.R.L. - Sistema de Cotización
+ * Estilos: Página de Inventario
+ * @version 1.0.0
+ */
+
+/* Stats del inventario */
+.inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.inventory-stat-card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.inventory-stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    flex-shrink: 0;
+}
+
+.inventory-stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.inventory-stat-icon.primary {
+    background-color: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+}
+
+.inventory-stat-icon.success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.inventory-stat-icon.warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.inventory-stat-icon.info {
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.inventory-stat-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.inventory-stat-value {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.inventory-stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+/* Botones de acción del inventario */
+.inventory-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.btn-group-import {
+    display: flex;
+    gap: 1px;
+    background-color: var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.btn-group-import .btn {
+    border-radius: 0;
+}
+
+.btn-group-import .btn:first-child {
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.btn-group-import .btn:last-child {
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+/* Input file oculto */
+.file-input-hidden {
+    display: none;
+}
+
+/* Modal de producto */
+.product-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.product-form-grid .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.product-calculated {
+    background-color: var(--color-gray-50);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-md);
+}
+
+.product-calculated-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.product-calculated-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.product-calculated-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-calculated-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.product-calculated-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+/* Vista de producto */
+.product-view {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.product-view-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.product-view-row:last-child {
+    border-bottom: none;
+}
+
+.product-view-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-medium);
+}
+
+.product-view-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.product-view-value.highlight {
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .inventory-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .inventory-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-calculated-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-actions {
+        width: 100%;
+    }
+    
+    .inventory-actions .btn {
+        flex: 1;
+    }
+}

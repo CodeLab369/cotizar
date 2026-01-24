@@ -18,10 +18,12 @@
 @import url('components/modal.css');
 @import url('components/sidebar.css');
 @import url('components/header.css');
+@import url('components/table.css');
 
 /* Páginas */
 @import url('pages/login.css');
 @import url('pages/dashboard.css');
+@import url('pages/inventory.css');
 
 /* Google Fonts - Inter */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
