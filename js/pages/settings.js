@@ -62,35 +62,31 @@ class SettingsPage {
                 </div>
             </div>
 
-            <div class="settings-layout">
-                <!-- Menú lateral -->
-                <nav class="settings-nav">
-                    <button class="settings-nav-item active" data-section="company">
-                        ${ICONS.building}
-                        <span>Datos de Empresa</span>
-                    </button>
-                    <button class="settings-nav-item" data-section="quotation">
-                        ${ICONS.fileText}
-                        <span>Cotizaciones</span>
-                    </button>
-                    <button class="settings-nav-item" data-section="backup">
-                        ${ICONS.database}
-                        <span>Respaldo de Datos</span>
-                    </button>
-                </nav>
+            <!-- Tabs de navegación -->
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-section="company">
+                    ${ICONS.building}
+                    <span>Datos de Empresa</span>
+                </button>
+                <button class="settings-tab" data-section="quotation">
+                    ${ICONS.fileText}
+                    <span>Cotizaciones</span>
+                </button>
+                <button class="settings-tab" data-section="backup">
+                    ${ICONS.database}
+                    <span>Respaldo de Datos</span>
+                </button>
+            </div>
 
-                <!-- Contenido -->
-                <div class="settings-content">
-                    <div class="settings-section active" id="section-company">
-                        ${this.renderCompanySection()}
-                    </div>
-                    <div class="settings-section" id="section-quotation">
-                        ${this.renderQuotationSection()}
-                    </div>
-                    <div class="settings-section" id="section-backup">
-                        ${this.renderBackupSection()}
-                    </div>
-                </div>
+            <!-- Contenido de tabs -->
+            <div class="settings-tab-content active" id="section-company">
+                ${this.renderCompanySection()}
+            </div>
+            <div class="settings-tab-content" id="section-quotation">
+                ${this.renderQuotationSection()}
+            </div>
+            <div class="settings-tab-content" id="section-backup">
+                ${this.renderBackupSection()}
             </div>
         `;
 
@@ -358,8 +354,8 @@ class SettingsPage {
      * Vincula eventos
      */
     bindEvents() {
-        // Navegación entre secciones
-        this.container.querySelectorAll('.settings-nav-item').forEach(btn => {
+        // Navegación entre tabs
+        this.container.querySelectorAll('.settings-tab').forEach(btn => {
             btn.addEventListener('click', () => {
                 const section = btn.dataset.section;
                 this.switchSection(section);
@@ -417,13 +413,13 @@ class SettingsPage {
     switchSection(sectionId) {
         this.activeSection = sectionId;
 
-        // Actualizar navegación
-        this.container.querySelectorAll('.settings-nav-item').forEach(btn => {
+        // Actualizar tabs
+        this.container.querySelectorAll('.settings-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.section === sectionId);
         });
 
         // Actualizar contenido
-        this.container.querySelectorAll('.settings-section').forEach(section => {
+        this.container.querySelectorAll('.settings-tab-content').forEach(section => {
             section.classList.toggle('active', section.id === `section-${sectionId}`);
         });
     }
