@@ -1013,12 +1013,19 @@ class QuotationsPage {
         if (!quotation) return;
 
         // Crear ventana de impresión con diseño profesional
-        const printWindow = window.open('', '_blank');
+        const printWindow = window.open('about:blank', '_blank');
         
         const html = this.generatePDFContent(quotation);
         
         printWindow.document.write(html);
         printWindow.document.close();
+        
+        // Cambiar la URL del historial para que no aparezca en el PDF
+        try {
+            printWindow.history.replaceState(null, ' ', ' ');
+        } catch (e) {
+            // Ignorar si no se puede cambiar
+        }
         
         // Esperar a que cargue y luego imprimir
         printWindow.onload = () => {
@@ -1049,7 +1056,7 @@ class QuotationsPage {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotización ${quotation.numero}</title>
+    <title> </title>
     <style>
         * {
             margin: 0;
@@ -1060,6 +1067,18 @@ class QuotationsPage {
         @page {
             size: A4;
             margin: 15mm;
+        }
+        
+        @media print {
+            @page {
+                margin: 15mm;
+            }
+            
+            /* Ocultar header y footer del navegador */
+            html {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
         
         body {
