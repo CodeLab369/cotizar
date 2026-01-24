@@ -702,14 +702,19 @@ class InventoryPage {
             </div>
         `;
 
-        Modal.open({
+        const modalId = Modal.open({
             title: 'Detalle del Producto',
             content,
             size: 'sm',
             showFooter: true,
             footerContent: `
-                <button class="btn btn-primary" onclick="Modal.closeAll()">Cerrar</button>
+                <button class="btn btn-primary" id="btn-close-view">Cerrar</button>
             `
+        });
+
+        // Vincular evento del botón cerrar
+        document.getElementById('btn-close-view')?.addEventListener('click', () => {
+            Modal.close(modalId);
         });
     }
 
