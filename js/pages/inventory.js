@@ -556,19 +556,36 @@ class InventoryPage {
         const isEdit = id !== null;
         const product = isEdit ? Inventory.getById(id) : null;
 
+        // Estado para detectar producto existente
+        let existingProduct = null;
+        let isRestockMode = false;
+
         const content = `
             <form id="product-form">
+                <!-- Alerta de producto existente -->
+                <div class="product-exists-alert" id="product-exists-alert" style="display: none;">
+                    <div class="product-exists-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <div class="product-exists-content">
+                        <div class="product-exists-title">Producto existente detectado</div>
+                        <div class="product-exists-text" id="product-exists-text"></div>
+                    </div>
+                </div>
+
                 <div class="product-form-grid">
                     <div class="form-group">
                         <label class="form-label required" for="input-marca">Marca</label>
-                        <input type="text" id="input-marca" placeholder="Ingrese marca" value="${product?.marca || ''}" required>
+                        <input type="text" id="input-marca" placeholder="Ingrese marca" value="${product?.marca || ''}" required ${isEdit ? 'readonly' : ''}>
                     </div>
                     <div class="form-group">
                         <label class="form-label required" for="input-amperaje">Amperaje</label>
-                        <input type="text" id="input-amperaje" placeholder="Ingrese amperaje" value="${product?.amperaje || ''}" required>
+                        <input type="text" id="input-amperaje" placeholder="Ingrese amperaje" value="${product?.amperaje || ''}" required ${isEdit ? 'readonly' : ''}>
                     </div>
                     <div class="form-group">
-                        <label class="form-label required" for="input-cantidad">Cantidad</label>
+                        <label class="form-label required" for="input-cantidad">
+                            <span id="cantidad-label">Cantidad</span>
+                        </label>
                         <input type="number" id="input-cantidad" placeholder="Ingrese cantidad" min="0" value="${product?.cantidad || ''}" required>
                     </div>
                     <div class="form-group">
@@ -579,6 +596,14 @@ class InventoryPage {
                         <label class="form-label required" for="input-precio">Precio de Venta</label>
                         <input type="text" id="input-precio" placeholder="Ingrese precio de venta" value="${product ? Currency.format(product.precioVenta, false) : ''}" required>
                     </div>
+                </div>
+
+                <!-- Checkbox para actualizar precios en modo reabastecimiento -->
+                <div class="form-group restock-options" id="restock-options" style="display: none;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="update-prices-checkbox">
+                        <span>Actualizar precios con los valores ingresados</span>
+                    </label>
                 </div>
                 
                 <div class="product-calculated">
@@ -608,15 +633,97 @@ class InventoryPage {
             `
         });
 
+        // Función para verificar si el producto existe
+        const checkExistingProduct = () => {
+            if (isEdit) return; // No verificar en modo edición
+
+            const marca = document.getElementById('input-marca')?.value?.trim();
+            const amperaje = document.getElementById('input-amperaje')?.value?.trim();
+
+            if (!marca || !amperaje) {
+                hideExistingAlert();
+                return;
+            }
+
+            existingProduct = Inventory.findByMarcaAmperaje(marca, amperaje);
+
+            if (existingProduct) {
+                showExistingAlert(existingProduct);
+            } else {
+                hideExistingAlert();
+            }
+        };
+
+        const showExistingAlert = (product) => {
+            isRestockMode = true;
+            const alert = document.getElementById('product-exists-alert');
+            const text = document.getElementById('product-exists-text');
+            const saveBtn = document.getElementById('modal-save');
+            const cantidadLabel = document.getElementById('cantidad-label');
+            const restockOptions = document.getElementById('restock-options');
+
+            alert.style.display = 'flex';
+            text.innerHTML = `<strong>${product.marca} ${product.amperaje}</strong> ya existe con <strong>${product.cantidad}</strong> unidades en stock.`;
+            saveBtn.textContent = 'Reabastecer';
+            saveBtn.classList.remove('btn-primary');
+            saveBtn.classList.add('btn-success');
+            cantidadLabel.textContent = 'Cantidad a agregar';
+            restockOptions.style.display = 'block';
+
+            // Actualizar título del modal
+            const modalTitle = document.querySelector('.modal-title');
+            if (modalTitle) modalTitle.textContent = 'Reabastecer Producto';
+        };
+
+        const hideExistingAlert = () => {
+            isRestockMode = false;
+            existingProduct = null;
+            const alert = document.getElementById('product-exists-alert');
+            const saveBtn = document.getElementById('modal-save');
+            const cantidadLabel = document.getElementById('cantidad-label');
+            const restockOptions = document.getElementById('restock-options');
+
+            alert.style.display = 'none';
+            saveBtn.textContent = 'Agregar';
+            saveBtn.classList.add('btn-primary');
+            saveBtn.classList.remove('btn-success');
+            cantidadLabel.textContent = 'Cantidad';
+            restockOptions.style.display = 'none';
+
+            // Restaurar título
+            const modalTitle = document.querySelector('.modal-title');
+            if (modalTitle) modalTitle.textContent = 'Agregar Producto';
+        };
+
         // Calcular totales en tiempo real
         const updateCalculations = () => {
             const cantidad = parseInt(document.getElementById('input-cantidad')?.value) || 0;
             const costo = Currency.parse(document.getElementById('input-costo')?.value) || 0;
             const precio = Currency.parse(document.getElementById('input-precio')?.value) || 0;
 
-            document.getElementById('calc-costo-total').textContent = Currency.format(cantidad * costo);
-            document.getElementById('calc-costo-venta').textContent = Currency.format(cantidad * precio);
+            // Si estamos en modo reabastecimiento, calcular con la cantidad total
+            if (isRestockMode && existingProduct) {
+                const totalCantidad = existingProduct.cantidad + cantidad;
+                const updatePrices = document.getElementById('update-prices-checkbox')?.checked;
+                const costoFinal = updatePrices ? costo : existingProduct.costo;
+                const precioFinal = updatePrices ? precio : existingProduct.precioVenta;
+
+                document.getElementById('calc-costo-total').textContent = Currency.format(totalCantidad * costoFinal);
+                document.getElementById('calc-costo-venta').textContent = Currency.format(totalCantidad * precioFinal);
+            } else {
+                document.getElementById('calc-costo-total').textContent = Currency.format(cantidad * costo);
+                document.getElementById('calc-costo-venta').textContent = Currency.format(cantidad * precio);
+            }
         };
+
+        // Eventos para detectar producto existente
+        if (!isEdit) {
+            document.getElementById('input-marca')?.addEventListener('blur', checkExistingProduct);
+            document.getElementById('input-amperaje')?.addEventListener('blur', checkExistingProduct);
+        }
+
+        // Checkbox de actualizar precios
+        document.getElementById('update-prices-checkbox')?.addEventListener('change', updateCalculations);
 
         // Formateo de moneda en inputs
         ['input-costo', 'input-precio'].forEach(inputId => {
@@ -652,6 +759,15 @@ class InventoryPage {
             if (isEdit) {
                 Inventory.update(id, productData);
                 Notifications.success('Producto actualizado correctamente');
+            } else if (isRestockMode && existingProduct) {
+                // Modo reabastecimiento
+                const updatePrices = document.getElementById('update-prices-checkbox')?.checked;
+                Inventory.restock(existingProduct.id, productData.cantidad, {
+                    updatePrices,
+                    costo: productData.costo,
+                    precioVenta: productData.precioVenta
+                });
+                Notifications.success(`Producto reabastecido: +${productData.cantidad} unidades agregadas`);
             } else {
                 Inventory.add(productData);
                 Notifications.success('Producto agregado correctamente');
@@ -780,16 +896,12 @@ class InventoryPage {
             
             if (data.length === 0) {
                 Notifications.error('El archivo está vacío o no tiene el formato correcto');
+                event.target.value = '';
                 return;
             }
 
-            const result = Inventory.import(data);
-            
-            Notifications.success(
-                `Importación completada: ${result.added} productos agregados${result.errors > 0 ? `, ${result.errors} errores` : ''}`
-            );
-            
-            this.loadData();
+            // Mostrar modal de opciones de importación
+            this.showImportOptionsModal(data);
         } catch (error) {
             console.error('Error al importar:', error);
             Notifications.error('Error al leer el archivo. Asegúrate de que sea un archivo Excel válido.');
@@ -797,6 +909,150 @@ class InventoryPage {
 
         // Limpiar input
         event.target.value = '';
+    }
+
+    /**
+     * Muestra el modal de opciones de importación
+     */
+    showImportOptionsModal(data) {
+        // Contar productos existentes vs nuevos
+        let existingCount = 0;
+        let newCount = 0;
+
+        data.forEach(item => {
+            const existing = Inventory.findByMarcaAmperaje(item.marca, item.amperaje);
+            if (existing) {
+                existingCount++;
+            } else {
+                newCount++;
+            }
+        });
+
+        const content = `
+            <div class="import-options-summary">
+                <div class="import-summary-title">Resumen del archivo</div>
+                <div class="import-summary-grid">
+                    <div class="import-summary-item">
+                        <span class="import-summary-value">${data.length}</span>
+                        <span class="import-summary-label">Total productos</span>
+                    </div>
+                    <div class="import-summary-item new">
+                        <span class="import-summary-value">${newCount}</span>
+                        <span class="import-summary-label">Productos nuevos</span>
+                    </div>
+                    <div class="import-summary-item existing">
+                        <span class="import-summary-value">${existingCount}</span>
+                        <span class="import-summary-label">Ya existentes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="import-options-form">
+                <div class="import-options-title">¿Qué deseas hacer con los ${existingCount} productos existentes?</div>
+                
+                <div class="import-option-group">
+                    <label class="radio-card">
+                        <input type="radio" name="import-mode" value="restock" ${existingCount > 0 ? 'checked' : ''}>
+                        <div class="radio-card-content">
+                            <div class="radio-card-icon success">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                            </div>
+                            <div class="radio-card-text">
+                                <div class="radio-card-title">Reabastecer existentes</div>
+                                <div class="radio-card-desc">Suma las cantidades a los productos que ya existen</div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="radio-card">
+                        <input type="radio" name="import-mode" value="duplicate" ${existingCount === 0 ? 'checked' : ''}>
+                        <div class="radio-card-content">
+                            <div class="radio-card-icon warning">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                            </div>
+                            <div class="radio-card-text">
+                                <div class="radio-card-title">Crear duplicados</div>
+                                <div class="radio-card-desc">Crea nuevos registros aunque ya existan</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="import-extra-options" id="import-extra-options" style="${existingCount > 0 ? '' : 'display: none;'}">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="import-update-prices">
+                        <span>Actualizar precios de los productos existentes</span>
+                    </label>
+                </div>
+            </div>
+        `;
+
+        const modalId = Modal.open({
+            title: 'Opciones de Importación',
+            content,
+            size: 'default',
+            showFooter: true,
+            footerContent: `
+                <button class="btn btn-ghost" id="import-cancel">Cancelar</button>
+                <button class="btn btn-primary" id="import-confirm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Importar
+                </button>
+            `
+        });
+
+        // Mostrar/ocultar opciones extra según el modo
+        document.querySelectorAll('input[name="import-mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const extraOptions = document.getElementById('import-extra-options');
+                if (e.target.value === 'restock') {
+                    extraOptions.style.display = '';
+                } else {
+                    extraOptions.style.display = 'none';
+                }
+            });
+        });
+
+        // Cancelar
+        document.getElementById('import-cancel')?.addEventListener('click', () => {
+            Modal.close(modalId);
+        });
+
+        // Confirmar importación
+        document.getElementById('import-confirm')?.addEventListener('click', () => {
+            const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'duplicate';
+            const updatePrices = document.getElementById('import-update-prices')?.checked || false;
+
+            const options = {
+                restockExisting: mode === 'restock',
+                updatePrices: updatePrices
+            };
+
+            const result = Inventory.import(data, options);
+
+            // Construir mensaje de resultado
+            let message = '';
+            if (result.added > 0) {
+                message += `${result.added} producto(s) nuevo(s)`;
+            }
+            if (result.restocked > 0) {
+                message += message ? ', ' : '';
+                message += `${result.restocked} producto(s) reabastecido(s)`;
+            }
+            if (result.errors > 0) {
+                message += message ? ', ' : '';
+                message += `${result.errors} error(es)`;
+            }
+
+            if (result.added > 0 || result.restocked > 0) {
+                Notifications.success(`Importación completada: ${message}`);
+            } else if (result.errors > 0) {
+                Notifications.error('No se pudo importar ningún producto');
+            }
+
+            Modal.close(modalId);
+            this.loadData();
+        });
     }
 
     /**

@@ -35,6 +35,65 @@ class InventoryService {
     }
 
     /**
+     * Busca un producto por Marca + Amperaje
+     * @param {string} marca - Marca del producto
+     * @param {string} amperaje - Amperaje del producto
+     * @returns {Object|null} Producto encontrado o null
+     */
+    findByMarcaAmperaje(marca, amperaje) {
+        const inventory = this.getAll();
+        const marcaNorm = (marca || '').trim().toLowerCase();
+        const amperajeNorm = (amperaje || '').trim().toLowerCase();
+        
+        return inventory.find(item => 
+            item.marca.toLowerCase() === marcaNorm && 
+            item.amperaje.toLowerCase() === amperajeNorm
+        ) || null;
+    }
+
+    /**
+     * Reabastece un producto existente (suma cantidad)
+     * @param {string} id - ID del producto
+     * @param {number} cantidad - Cantidad a sumar
+     * @param {Object} options - Opciones adicionales
+     * @returns {Object|null} Producto actualizado o null
+     */
+    restock(id, cantidad, options = {}) {
+        const inventory = this.getAll();
+        const index = inventory.findIndex(item => item.id === id);
+
+        if (index === -1) return null;
+
+        const product = inventory[index];
+        const nuevaCantidad = product.cantidad + (parseInt(cantidad) || 0);
+
+        const updatedProduct = {
+            ...product,
+            cantidad: nuevaCantidad,
+            updatedAt: Date.now()
+        };
+
+        // Actualizar precios si se especifica
+        if (options.updatePrices) {
+            if (options.costo !== undefined) {
+                updatedProduct.costo = Currency.parse(options.costo) ?? product.costo;
+            }
+            if (options.precioVenta !== undefined) {
+                updatedProduct.precioVenta = Currency.parse(options.precioVenta) ?? product.precioVenta;
+            }
+        }
+
+        // Recalcular totales
+        updatedProduct.costoTotal = Currency.round(updatedProduct.cantidad * updatedProduct.costo);
+        updatedProduct.costoVenta = Currency.round(updatedProduct.cantidad * updatedProduct.precioVenta);
+
+        inventory[index] = updatedProduct;
+        Storage.set(this.storageKey, inventory);
+
+        return updatedProduct;
+    }
+
+    /**
      * Agrega un nuevo producto
      * @param {Object} product - Datos del producto
      * @returns {Object} Producto creado
@@ -120,14 +179,18 @@ class InventoryService {
     }
 
     /**
-     * Importa productos desde un array
+     * Importa productos desde un array con opciones de reabastecimiento
      * @param {Array} products - Lista de productos a importar
+     * @param {Object} options - Opciones de importación
      * @returns {Object} Resultado de la importación
      */
-    import(products) {
+    import(products, options = {}) {
         const inventory = this.getAll();
         let added = 0;
+        let restocked = 0;
         let errors = 0;
+
+        const { restockExisting = false, updatePrices = false } = options;
 
         products.forEach(product => {
             try {
@@ -136,22 +199,52 @@ class InventoryService {
                     return;
                 }
 
-                const newProduct = {
-                    id: generateId(),
-                    marca: String(product.marca || '').trim(),
-                    amperaje: String(product.amperaje || '').trim(),
-                    cantidad: parseInt(product.cantidad) || 0,
-                    costo: parseFloat(product.costo) || 0,
-                    precioVenta: parseFloat(product.precioVenta || product['precio_venta'] || product['Precio de Venta']) || 0,
-                    createdAt: Date.now(),
-                    updatedAt: Date.now()
-                };
+                const marca = String(product.marca || '').trim();
+                const amperaje = String(product.amperaje || '').trim();
+                const cantidad = parseInt(product.cantidad) || 0;
+                const costo = parseFloat(product.costo) || 0;
+                const precioVenta = parseFloat(product.precioVenta || product['precio_venta'] || product['Precio de Venta']) || 0;
 
-                newProduct.costoTotal = Currency.round(newProduct.cantidad * newProduct.costo);
-                newProduct.costoVenta = Currency.round(newProduct.cantidad * newProduct.precioVenta);
+                // Buscar si existe
+                const existingIndex = inventory.findIndex(item =>
+                    item.marca.toLowerCase() === marca.toLowerCase() &&
+                    item.amperaje.toLowerCase() === amperaje.toLowerCase()
+                );
 
-                inventory.push(newProduct);
-                added++;
+                if (existingIndex !== -1 && restockExisting) {
+                    // Reabastecer producto existente
+                    const existing = inventory[existingIndex];
+                    existing.cantidad += cantidad;
+                    existing.updatedAt = Date.now();
+
+                    if (updatePrices) {
+                        existing.costo = costo;
+                        existing.precioVenta = precioVenta;
+                    }
+
+                    existing.costoTotal = Currency.round(existing.cantidad * existing.costo);
+                    existing.costoVenta = Currency.round(existing.cantidad * existing.precioVenta);
+
+                    restocked++;
+                } else {
+                    // Crear nuevo producto
+                    const newProduct = {
+                        id: generateId(),
+                        marca,
+                        amperaje,
+                        cantidad,
+                        costo,
+                        precioVenta,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+
+                    newProduct.costoTotal = Currency.round(newProduct.cantidad * newProduct.costo);
+                    newProduct.costoVenta = Currency.round(newProduct.cantidad * newProduct.precioVenta);
+
+                    inventory.push(newProduct);
+                    added++;
+                }
             } catch (e) {
                 errors++;
             }
@@ -159,7 +252,7 @@ class InventoryService {
 
         Storage.set(this.storageKey, inventory);
 
-        return { added, errors, total: products.length };
+        return { added, restocked, errors, total: products.length };
     }
 
     /**
