@@ -5,6 +5,7 @@
  */
 
 import { getInitials } from '../utils/helpers.js';
+import Profile from './profile.js';
 
 /**
  * Iconos SVG para el header
@@ -121,6 +122,8 @@ class HeaderManager {
                     this.onLogout();
                 } else if (action === 'settings' && typeof this.onNavigate === 'function') {
                     this.onNavigate('settings');
+                } else if (action === 'profile') {
+                    this.openProfile();
                 }
                 
                 userBtn?.classList.remove('active');
@@ -138,6 +141,16 @@ class HeaderManager {
             titleEl.textContent = title;
             this.currentTitle = title;
         }
+    }
+
+    /**
+     * Abre el modal de perfil
+     */
+    openProfile() {
+        Profile.open((updatedUser) => {
+            // Actualizar header cuando se modifica el perfil
+            this.updateUser(updatedUser);
+        });
     }
 
     /**

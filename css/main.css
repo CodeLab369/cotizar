@@ -19,6 +19,7 @@
 @import url('components/sidebar.css');
 @import url('components/header.css');
 @import url('components/table.css');
+@import url('components/profile.css');
 
 /* Páginas */
 @import url('pages/login.css');
