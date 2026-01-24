@@ -24,7 +24,9 @@ const ICONS = {
     mapPin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
     building: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><line x1="8" y1="6" x2="8" y2="6"></line><line x1="16" y1="6" x2="16" y2="6"></line><line x1="12" y1="6" x2="12" y2="6"></line><line x1="8" y1="10" x2="8" y2="10"></line><line x1="16" y1="10" x2="16" y2="10"></line><line x1="12" y1="10" x2="12" y2="10"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="12" y1="14" x2="12" y2="14"></line></svg>`,
     eye: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
-    x: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+    x: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+    login: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`,
+    tool: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`
 };
 
 /**
@@ -52,8 +54,6 @@ class StoresPage {
      * Renderiza el contenido HTML
      */
     renderContent() {
-        const stats = Stores.getStats();
-
         const html = `
             <div class="page-header">
                 <div class="page-header-content">
@@ -65,55 +65,6 @@ class StoresPage {
                         ${ICONS.plus}
                         <span>Nueva Tienda</span>
                     </button>
-                </div>
-            </div>
-
-            <!-- Estadísticas -->
-            <div class="stores-stats">
-                <div class="stat-card">
-                    <div class="stat-card-icon">
-                        ${ICONS.building}
-                    </div>
-                    <div class="stat-card-content">
-                        <div class="stat-card-value">${stats.totalTiendas}</div>
-                        <div class="stat-card-label">Total Tiendas</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon">
-                        ${ICONS.home}
-                    </div>
-                    <div class="stat-card-content">
-                        <div class="stat-card-value">${stats.casaMatriz}</div>
-                        <div class="stat-card-label">Casa Matriz</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon">
-                        ${ICONS.store}
-                    </div>
-                    <div class="stat-card-content">
-                        <div class="stat-card-value">${stats.sucursales}</div>
-                        <div class="stat-card-label">Sucursales</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon">
-                        ${ICONS.send}
-                    </div>
-                    <div class="stat-card-content">
-                        <div class="stat-card-value">${stats.totalTransferencias}</div>
-                        <div class="stat-card-label">Envíos Realizados</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon">
-                        ${ICONS.package}
-                    </div>
-                    <div class="stat-card-content">
-                        <div class="stat-card-value">${stats.unidadesEnviadas}</div>
-                        <div class="stat-card-label">Unidades Enviadas</div>
-                    </div>
                 </div>
             </div>
 
@@ -208,12 +159,9 @@ class StoresPage {
                 </div>
 
                 <div class="store-card-actions">
-                    <button class="btn btn-outline btn-sm" data-action="send" data-id="${store.id}" title="Enviar productos">
-                        ${ICONS.send}
-                        <span>Enviar</span>
-                    </button>
-                    <button class="btn btn-outline btn-sm" data-action="view" data-id="${store.id}" title="Ver inventario">
-                        ${ICONS.eye}
+                    <button class="btn btn-primary btn-sm" data-action="enter" data-id="${store.id}" title="Ingresar a tienda">
+                        ${ICONS.login}
+                        <span>Ingresar</span>
                     </button>
                     <button class="btn btn-outline btn-sm" data-action="edit" data-id="${store.id}" title="Editar">
                         ${ICONS.edit}
@@ -246,11 +194,8 @@ class StoresPage {
                 const id = btn.dataset.id;
 
                 switch (action) {
-                    case 'send':
-                        this.showSendProductsModal(id);
-                        break;
-                    case 'view':
-                        this.showStoreInventory(id);
+                    case 'enter':
+                        this.showStoreDevelopment(id);
                         break;
                     case 'edit':
                         this.showStoreModal(id);
@@ -776,6 +721,39 @@ class StoresPage {
         });
 
         document.getElementById('btn-close-inventory')?.addEventListener('click', () => {
+            Modal.close(modalId);
+        });
+    }
+
+    /**
+     * Muestra página de tienda en desarrollo
+     */
+    showStoreDevelopment(storeId) {
+        const store = Stores.getById(storeId);
+        if (!store) return;
+
+        const content = `
+            <div class="page-development" style="padding: var(--spacing-xl);">
+                <div class="page-development-icon">
+                    ${ICONS.tool}
+                </div>
+                <h2 class="page-development-title">En Desarrollo</h2>
+                <p class="page-development-subtitle">Esta funcionalidad estará disponible próximamente</p>
+                <p class="page-development-text">Estamos trabajando para traerte la mejor experiencia de gestión para <strong>${store.nombre}</strong>.</p>
+            </div>
+        `;
+
+        const modalId = Modal.open({
+            title: store.nombre,
+            content,
+            size: 'default',
+            showFooter: true,
+            footerContent: `
+                <button class="btn btn-primary" id="btn-close-dev">Cerrar</button>
+            `
+        });
+
+        document.getElementById('btn-close-dev')?.addEventListener('click', () => {
             Modal.close(modalId);
         });
     }
