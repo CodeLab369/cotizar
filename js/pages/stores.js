@@ -6,8 +6,10 @@
 
 import Stores, { STORE_TYPES } from '../services/stores.js';
 import Inventory from '../services/inventory.js';
+import Currency from '../utils/currency.js';
 import Modal from '../components/modal.js';
 import Notifications from '../components/notifications.js';
+import { debounce } from '../utils/helpers.js';
 
 /**
  * Iconos SVG
@@ -27,7 +29,18 @@ const ICONS = {
     x: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
     login: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`,
     tool: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
-    arrowLeft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`
+    arrowLeft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
+    search: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+    layers: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`,
+    dollarSign: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
+    truck: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`,
+    chevronLeft: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
+    chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+    emptyBox: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`,
+    checkSquare: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>`,
+    square: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`,
+    minusSquare: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>`,
+    minus: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
 };
 
 /**
@@ -40,6 +53,18 @@ class StoresPage {
         this.sendItems = []; // Items para envío
         this.currentView = 'list'; // 'list' o 'detail'
         this.currentStoreId = null;
+        
+        // Propiedades para vista de detalle (tipo inventario)
+        this.storeInventory = [];
+        this.mainInventory = [];
+        this.selectedProducts = new Map(); // productId -> cantidad a enviar
+        this.detailCurrentPage = 1;
+        this.detailItemsPerPage = 10;
+        this.detailFilters = {
+            search: '',
+            marca: ''
+        };
+        this.filteredMainInventory = [];
     }
 
     /**
@@ -104,6 +129,15 @@ class StoresPage {
         }
 
         const isMatriz = store.tipo === STORE_TYPES.MATRIZ;
+        this.storeInventory = store.inventory || [];
+        this.mainInventory = Inventory.getAll();
+        this.selectedProducts = new Map();
+        this.detailCurrentPage = 1;
+        this.filteredMainInventory = [...this.mainInventory];
+        
+        // Calcular estadísticas de la tienda
+        const storeStats = this.getStoreStats(store);
+        const brands = Inventory.getBrands();
 
         const html = `
             <div class="page-header">
@@ -116,31 +150,720 @@ class StoresPage {
                     <p class="page-description">
                         <span class="store-type-badge ${isMatriz ? 'matriz' : 'sucursal'}">${store.tipo}</span>
                         ${store.ciudad ? ` • ${store.ciudad}` : ''}
+                        ${store.encargado ? ` • ${store.encargado}` : ''}
                     </p>
                 </div>
             </div>
 
-            <div class="page-development">
-                <div class="page-development-icon">
-                    ${ICONS.tool}
+            <!-- Estadísticas de la tienda -->
+            <div class="store-detail-stats">
+                <div class="inventory-stat-card">
+                    <div class="inventory-stat-icon primary">
+                        ${ICONS.package}
+                    </div>
+                    <div class="inventory-stat-content">
+                        <div class="inventory-stat-value" id="store-stat-products">${storeStats.totalProductos}</div>
+                        <div class="inventory-stat-label">Productos en Tienda</div>
+                    </div>
                 </div>
-                <h2 class="page-development-title">En Desarrollo</h2>
-                <p class="page-development-subtitle">Esta funcionalidad estará disponible próximamente</p>
-                <p class="page-development-text">Estamos trabajando para traerte la mejor experiencia de gestión para esta tienda.</p>
+                <div class="inventory-stat-card">
+                    <div class="inventory-stat-icon success">
+                        ${ICONS.layers}
+                    </div>
+                    <div class="inventory-stat-content">
+                        <div class="inventory-stat-value" id="store-stat-units">${storeStats.totalUnidades}</div>
+                        <div class="inventory-stat-label">Unidades Totales</div>
+                    </div>
+                </div>
+                <div class="inventory-stat-card">
+                    <div class="inventory-stat-icon warning">
+                        ${ICONS.dollarSign}
+                    </div>
+                    <div class="inventory-stat-content">
+                        <div class="inventory-stat-value" id="store-stat-cost">${Currency.format(storeStats.costoTotal)}</div>
+                        <div class="inventory-stat-label">Costo Total</div>
+                    </div>
+                </div>
+                <div class="inventory-stat-card">
+                    <div class="inventory-stat-icon info">
+                        ${ICONS.truck}
+                    </div>
+                    <div class="inventory-stat-content">
+                        <div class="inventory-stat-value" id="store-stat-selected">0</div>
+                        <div class="inventory-stat-label">Seleccionados para Enviar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs para navegación -->
+            <div class="store-detail-tabs">
+                <button class="store-tab active" data-tab="send">
+                    ${ICONS.send}
+                    <span>Enviar Productos</span>
+                </button>
+                <button class="store-tab" data-tab="inventory">
+                    ${ICONS.package}
+                    <span>Inventario de Tienda</span>
+                </button>
+            </div>
+
+            <!-- Contenido de tabs -->
+            <div class="store-detail-content">
+                <!-- Tab: Enviar Productos -->
+                <div class="store-tab-content active" id="tab-send">
+                    <div class="send-products-container">
+                        <!-- Toolbar de búsqueda -->
+                        <div class="table-toolbar">
+                            <div class="table-toolbar-left">
+                                <div class="table-search">
+                                    <span class="table-search-icon">${ICONS.search}</span>
+                                    <input type="text" class="table-search-input" id="send-search-input" placeholder="Buscar por marca o amperaje...">
+                                </div>
+                                <select id="send-filter-marca" class="filter-select">
+                                    <option value="">Todas las marcas</option>
+                                    ${brands.map(b => `<option value="${b}">${b}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="table-toolbar-right">
+                                <button class="btn btn-primary" id="btn-send-selected" disabled>
+                                    ${ICONS.send}
+                                    <span>Enviar Seleccionados (<span id="selected-count">0</span>)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de productos disponibles -->
+                        <div class="table-wrapper">
+                            <table class="data-table" id="send-products-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-checkbox">
+                                            <button class="select-all-btn" id="select-all-btn" title="Seleccionar todos">
+                                                ${ICONS.square}
+                                            </button>
+                                        </th>
+                                        <th>Marca</th>
+                                        <th>Amperaje</th>
+                                        <th class="col-number">Disponible</th>
+                                        <th class="col-number">Cantidad a Enviar</th>
+                                        <th class="col-currency">Costo Unit.</th>
+                                        <th class="col-currency">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="send-products-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div class="table-pagination" id="send-pagination">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Inventario de Tienda -->
+                <div class="store-tab-content" id="tab-inventory">
+                    <div class="store-inventory-container">
+                        ${this.renderStoreInventoryTable(store)}
+                    </div>
+                </div>
             </div>
         `;
 
         this.container.innerHTML = html;
         this.bindStoreDetailEvents();
+        this.loadSendProductsTable();
+    }
+
+    /**
+     * Calcula estadísticas de la tienda
+     */
+    getStoreStats(store) {
+        const inventory = store.inventory || [];
+        return {
+            totalProductos: inventory.length,
+            totalUnidades: inventory.reduce((sum, item) => sum + item.cantidad, 0),
+            costoTotal: inventory.reduce((sum, item) => sum + (item.costo * item.cantidad), 0),
+            valorVenta: inventory.reduce((sum, item) => sum + (item.precioVenta * item.cantidad), 0)
+        };
+    }
+
+    /**
+     * Renderiza la tabla de inventario de la tienda
+     */
+    renderStoreInventoryTable(store) {
+        const inventory = store.inventory || [];
+        
+        if (inventory.length === 0) {
+            return `
+                <div class="table-empty">
+                    <div class="table-empty-icon">${ICONS.emptyBox}</div>
+                    <div class="table-empty-title">Sin inventario</div>
+                    <div class="table-empty-text">Esta tienda aún no tiene productos. Usa la pestaña "Enviar Productos" para agregar stock.</div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Marca</th>
+                            <th>Amperaje</th>
+                            <th class="col-number">Cantidad</th>
+                            <th class="col-currency">Costo Unit.</th>
+                            <th class="col-currency">Precio Venta</th>
+                            <th class="col-currency">Costo Total</th>
+                            <th class="col-currency">Valor Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${inventory.map(item => `
+                            <tr>
+                                <td>${item.marca}</td>
+                                <td>${item.amperaje}</td>
+                                <td class="col-number">${item.cantidad}</td>
+                                <td class="col-currency">${Currency.format(item.costo)}</td>
+                                <td class="col-currency">${Currency.format(item.precioVenta)}</td>
+                                <td class="col-currency">${Currency.format(item.costo * item.cantidad)}</td>
+                                <td class="col-currency">${Currency.format(item.precioVenta * item.cantidad)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr class="totals-row">
+                            <td colspan="2"><strong>TOTALES</strong></td>
+                            <td class="col-number"><strong>${inventory.reduce((s, i) => s + i.cantidad, 0)}</strong></td>
+                            <td></td>
+                            <td></td>
+                            <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.costo * i.cantidad), 0))}</strong></td>
+                            <td class="col-currency"><strong>${Currency.format(inventory.reduce((s, i) => s + (i.precioVenta * i.cantidad), 0))}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+    }
+
+    /**
+     * Carga la tabla de productos para enviar
+     */
+    loadSendProductsTable() {
+        this.applyDetailFilters();
+        this.renderSendProductsTable();
+        this.renderSendPagination();
+    }
+
+    /**
+     * Aplica filtros a la tabla de envío
+     */
+    applyDetailFilters() {
+        let filtered = [...this.mainInventory];
+
+        // Filtrar por búsqueda
+        if (this.detailFilters.search) {
+            const search = this.detailFilters.search.toLowerCase();
+            filtered = filtered.filter(item => 
+                item.marca.toLowerCase().includes(search) ||
+                item.amperaje.toLowerCase().includes(search)
+            );
+        }
+
+        // Filtrar por marca
+        if (this.detailFilters.marca) {
+            filtered = filtered.filter(item => item.marca === this.detailFilters.marca);
+        }
+
+        // Solo mostrar productos con stock disponible
+        filtered = filtered.filter(item => item.cantidad > 0);
+
+        this.filteredMainInventory = filtered;
+    }
+
+    /**
+     * Renderiza la tabla de productos para enviar
+     */
+    renderSendProductsTable() {
+        const tbody = document.getElementById('send-products-tbody');
+        if (!tbody) return;
+
+        const start = (this.detailCurrentPage - 1) * this.detailItemsPerPage;
+        const end = start + this.detailItemsPerPage;
+        const pageData = this.filteredMainInventory.slice(start, end);
+
+        if (pageData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="table-empty">
+                            <div class="table-empty-icon">${ICONS.emptyBox}</div>
+                            <div class="table-empty-title">No hay productos disponibles</div>
+                            <div class="table-empty-text">
+                                ${this.mainInventory.length === 0 
+                                    ? 'El inventario principal está vacío' 
+                                    : 'No se encontraron productos con los filtros aplicados'}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = pageData.map(item => {
+            const selectedQty = this.selectedProducts.get(item.id) || 0;
+            const isSelected = selectedQty > 0;
+            const totalCost = selectedQty * item.costo;
+
+            return `
+                <tr data-id="${item.id}" class="${isSelected ? 'row-selected' : ''}">
+                    <td class="col-checkbox">
+                        <button class="row-select-btn ${isSelected ? 'selected' : ''}" data-action="toggle-select" data-id="${item.id}">
+                            ${isSelected ? ICONS.checkSquare : ICONS.square}
+                        </button>
+                    </td>
+                    <td>${item.marca}</td>
+                    <td>${item.amperaje}</td>
+                    <td class="col-number">
+                        <span class="stock-badge ${item.cantidad < 5 ? 'low' : ''}">${item.cantidad}</span>
+                    </td>
+                    <td class="col-number">
+                        <div class="qty-input-group">
+                            <button class="qty-btn minus" data-action="decrease" data-id="${item.id}" ${selectedQty <= 0 ? 'disabled' : ''}>
+                                ${ICONS.minus}
+                            </button>
+                            <input type="number" 
+                                   class="qty-input" 
+                                   data-id="${item.id}" 
+                                   value="${selectedQty}" 
+                                   min="0" 
+                                   max="${item.cantidad}"
+                                   ${!isSelected ? 'disabled' : ''}>
+                            <button class="qty-btn plus" data-action="increase" data-id="${item.id}" ${selectedQty >= item.cantidad ? 'disabled' : ''}>
+                                ${ICONS.plus}
+                            </button>
+                        </div>
+                    </td>
+                    <td class="col-currency">${Currency.format(item.costo)}</td>
+                    <td class="col-currency">
+                        <span class="total-cost ${isSelected ? 'active' : ''}">${Currency.format(totalCost)}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Bind eventos de la tabla
+        this.bindTableRowEvents();
+    }
+
+    /**
+     * Vincula eventos a las filas de la tabla
+     */
+    bindTableRowEvents() {
+        const tbody = document.getElementById('send-products-tbody');
+        if (!tbody) return;
+
+        // Botones de selección
+        tbody.querySelectorAll('[data-action="toggle-select"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.dataset.id;
+                this.toggleProductSelection(id);
+            });
+        });
+
+        // Botones de cantidad
+        tbody.querySelectorAll('[data-action="decrease"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                this.adjustQuantity(id, -1);
+            });
+        });
+
+        tbody.querySelectorAll('[data-action="increase"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                this.adjustQuantity(id, 1);
+            });
+        });
+
+        // Inputs de cantidad
+        tbody.querySelectorAll('.qty-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const id = input.dataset.id;
+                const value = parseInt(e.target.value) || 0;
+                this.setQuantity(id, value);
+            });
+        });
+    }
+
+    /**
+     * Alterna la selección de un producto
+     */
+    toggleProductSelection(productId) {
+        const product = this.mainInventory.find(p => p.id === productId);
+        if (!product) return;
+
+        if (this.selectedProducts.has(productId)) {
+            this.selectedProducts.delete(productId);
+        } else {
+            // Seleccionar con cantidad 1 por defecto
+            this.selectedProducts.set(productId, 1);
+        }
+
+        this.updateSelectionUI();
+        this.renderSendProductsTable();
+    }
+
+    /**
+     * Ajusta la cantidad de un producto seleccionado
+     */
+    adjustQuantity(productId, delta) {
+        const product = this.mainInventory.find(p => p.id === productId);
+        if (!product) return;
+
+        let currentQty = this.selectedProducts.get(productId) || 0;
+        let newQty = currentQty + delta;
+
+        // Validar límites
+        newQty = Math.max(0, Math.min(newQty, product.cantidad));
+
+        if (newQty === 0) {
+            this.selectedProducts.delete(productId);
+        } else {
+            this.selectedProducts.set(productId, newQty);
+        }
+
+        this.updateSelectionUI();
+        this.renderSendProductsTable();
+    }
+
+    /**
+     * Establece la cantidad de un producto
+     */
+    setQuantity(productId, qty) {
+        const product = this.mainInventory.find(p => p.id === productId);
+        if (!product) return;
+
+        qty = Math.max(0, Math.min(qty, product.cantidad));
+
+        if (qty === 0) {
+            this.selectedProducts.delete(productId);
+        } else {
+            this.selectedProducts.set(productId, qty);
+        }
+
+        this.updateSelectionUI();
+        this.renderSendProductsTable();
+    }
+
+    /**
+     * Selecciona todos los productos de la página actual
+     */
+    selectAllProducts() {
+        const start = (this.detailCurrentPage - 1) * this.detailItemsPerPage;
+        const end = start + this.detailItemsPerPage;
+        const pageData = this.filteredMainInventory.slice(start, end);
+
+        // Verificar si todos están seleccionados
+        const allSelected = pageData.every(item => this.selectedProducts.has(item.id));
+
+        if (allSelected) {
+            // Deseleccionar todos de la página
+            pageData.forEach(item => {
+                this.selectedProducts.delete(item.id);
+            });
+        } else {
+            // Seleccionar todos con cantidad 1
+            pageData.forEach(item => {
+                if (!this.selectedProducts.has(item.id)) {
+                    this.selectedProducts.set(item.id, 1);
+                }
+            });
+        }
+
+        this.updateSelectionUI();
+        this.renderSendProductsTable();
+    }
+
+    /**
+     * Actualiza la UI de selección
+     */
+    updateSelectionUI() {
+        const totalSelected = this.selectedProducts.size;
+        const totalUnits = Array.from(this.selectedProducts.values()).reduce((sum, qty) => sum + qty, 0);
+
+        // Actualizar contador
+        const countEl = document.getElementById('selected-count');
+        if (countEl) countEl.textContent = totalUnits;
+
+        // Actualizar botón de envío
+        const btnSend = document.getElementById('btn-send-selected');
+        if (btnSend) btnSend.disabled = totalSelected === 0;
+
+        // Actualizar stat de seleccionados
+        const statSelected = document.getElementById('store-stat-selected');
+        if (statSelected) statSelected.textContent = totalUnits;
+
+        // Actualizar ícono de select all
+        this.updateSelectAllIcon();
+    }
+
+    /**
+     * Actualiza el ícono de seleccionar todos
+     */
+    updateSelectAllIcon() {
+        const btn = document.getElementById('select-all-btn');
+        if (!btn) return;
+
+        const start = (this.detailCurrentPage - 1) * this.detailItemsPerPage;
+        const end = start + this.detailItemsPerPage;
+        const pageData = this.filteredMainInventory.slice(start, end);
+
+        const selectedCount = pageData.filter(item => this.selectedProducts.has(item.id)).length;
+        
+        if (selectedCount === 0) {
+            btn.innerHTML = ICONS.square;
+        } else if (selectedCount === pageData.length) {
+            btn.innerHTML = ICONS.checkSquare;
+        } else {
+            btn.innerHTML = ICONS.minusSquare;
+        }
+    }
+
+    /**
+     * Renderiza la paginación
+     */
+    renderSendPagination() {
+        const container = document.getElementById('send-pagination');
+        if (!container) return;
+
+        const totalItems = this.filteredMainInventory.length;
+        const totalPages = Math.ceil(totalItems / this.detailItemsPerPage);
+
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const startItem = (this.detailCurrentPage - 1) * this.detailItemsPerPage + 1;
+        const endItem = Math.min(this.detailCurrentPage * this.detailItemsPerPage, totalItems);
+
+        container.innerHTML = `
+            <div class="pagination-info">
+                Mostrando ${startItem}-${endItem} de ${totalItems} productos
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="prev-page" ${this.detailCurrentPage === 1 ? 'disabled' : ''}>
+                    ${ICONS.chevronLeft}
+                </button>
+                <span class="pagination-current">Página ${this.detailCurrentPage} de ${totalPages}</span>
+                <button class="pagination-btn" id="next-page" ${this.detailCurrentPage === totalPages ? 'disabled' : ''}>
+                    ${ICONS.chevronRight}
+                </button>
+            </div>
+        `;
+
+        // Bind eventos de paginación
+        document.getElementById('prev-page')?.addEventListener('click', () => {
+            if (this.detailCurrentPage > 1) {
+                this.detailCurrentPage--;
+                this.renderSendProductsTable();
+                this.renderSendPagination();
+            }
+        });
+
+        document.getElementById('next-page')?.addEventListener('click', () => {
+            if (this.detailCurrentPage < totalPages) {
+                this.detailCurrentPage++;
+                this.renderSendProductsTable();
+                this.renderSendPagination();
+            }
+        });
     }
 
     /**
      * Bindea eventos de la vista de detalle
      */
     bindStoreDetailEvents() {
+        // Botón volver
         document.getElementById('btn-back-to-list')?.addEventListener('click', () => {
             this.goBackToList();
         });
+
+        // Tabs
+        document.querySelectorAll('.store-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                this.switchTab(tabId);
+            });
+        });
+
+        // Búsqueda
+        const searchInput = document.getElementById('send-search-input');
+        searchInput?.addEventListener('input', debounce((e) => {
+            this.detailFilters.search = e.target.value;
+            this.detailCurrentPage = 1;
+            this.loadSendProductsTable();
+        }, 300));
+
+        // Filtro de marca
+        document.getElementById('send-filter-marca')?.addEventListener('change', (e) => {
+            this.detailFilters.marca = e.target.value;
+            this.detailCurrentPage = 1;
+            this.loadSendProductsTable();
+        });
+
+        // Seleccionar todos
+        document.getElementById('select-all-btn')?.addEventListener('click', () => {
+            this.selectAllProducts();
+        });
+
+        // Botón enviar
+        document.getElementById('btn-send-selected')?.addEventListener('click', () => {
+            this.confirmSendProducts();
+        });
+    }
+
+    /**
+     * Cambia entre tabs
+     */
+    switchTab(tabId) {
+        // Actualizar botones
+        document.querySelectorAll('.store-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabId);
+        });
+
+        // Actualizar contenido
+        document.querySelectorAll('.store-tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `tab-${tabId}`);
+        });
+
+        // Refrescar inventario de tienda si es necesario
+        if (tabId === 'inventory') {
+            const store = Stores.getById(this.currentStoreId);
+            if (store) {
+                const container = document.querySelector('.store-inventory-container');
+                if (container) {
+                    container.innerHTML = this.renderStoreInventoryTable(store);
+                }
+            }
+        }
+    }
+
+    /**
+     * Confirma el envío de productos
+     */
+    confirmSendProducts() {
+        if (this.selectedProducts.size === 0) {
+            Notifications.warning('Selecciona al menos un producto para enviar');
+            return;
+        }
+
+        const store = Stores.getById(this.currentStoreId);
+        if (!store) return;
+
+        // Construir resumen
+        let totalUnits = 0;
+        let totalCost = 0;
+        const items = [];
+
+        this.selectedProducts.forEach((qty, productId) => {
+            const product = this.mainInventory.find(p => p.id === productId);
+            if (product) {
+                totalUnits += qty;
+                totalCost += qty * product.costo;
+                items.push({ product, qty });
+            }
+        });
+
+        const summaryHtml = `
+            <div class="send-confirm-summary">
+                <p class="send-confirm-text">¿Estás seguro de enviar los siguientes productos a <strong>${store.nombre}</strong>?</p>
+                
+                <div class="send-confirm-items">
+                    ${items.slice(0, 5).map(({ product, qty }) => `
+                        <div class="send-confirm-item">
+                            <span class="item-name">${product.marca} ${product.amperaje}</span>
+                            <span class="item-qty">x${qty}</span>
+                        </div>
+                    `).join('')}
+                    ${items.length > 5 ? `<div class="send-confirm-more">... y ${items.length - 5} productos más</div>` : ''}
+                </div>
+
+                <div class="send-confirm-totals">
+                    <div class="send-confirm-total">
+                        <span>Total Productos:</span>
+                        <strong>${items.length}</strong>
+                    </div>
+                    <div class="send-confirm-total">
+                        <span>Total Unidades:</span>
+                        <strong>${totalUnits}</strong>
+                    </div>
+                    <div class="send-confirm-total">
+                        <span>Costo Total:</span>
+                        <strong>${Currency.format(totalCost)}</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        Modal.confirm({
+            title: 'Confirmar Envío',
+            message: summaryHtml,
+            confirmText: 'Enviar Productos',
+            cancelText: 'Cancelar',
+            type: 'primary',
+            onConfirm: () => this.executeSendProducts()
+        });
+    }
+
+    /**
+     * Ejecuta el envío de productos
+     */
+    executeSendProducts() {
+        try {
+            const items = [];
+            this.selectedProducts.forEach((cantidad, productId) => {
+                items.push({ productId, cantidad });
+            });
+
+            const transfer = Stores.sendProducts(this.currentStoreId, items);
+            
+            Notifications.success(`Se enviaron ${transfer.totalUnidades} unidades correctamente`);
+            
+            // Limpiar selección y refrescar
+            this.selectedProducts.clear();
+            this.mainInventory = Inventory.getAll();
+            
+            // Actualizar stats
+            const store = Stores.getById(this.currentStoreId);
+            if (store) {
+                this.storeInventory = store.inventory || [];
+                this.updateStoreStats(store);
+            }
+            
+            this.loadSendProductsTable();
+            this.updateSelectionUI();
+
+        } catch (error) {
+            Notifications.error(error.message);
+        }
+    }
+
+    /**
+     * Actualiza las estadísticas de la tienda
+     */
+    updateStoreStats(store) {
+        const stats = this.getStoreStats(store);
+        
+        const statProducts = document.getElementById('store-stat-products');
+        const statUnits = document.getElementById('store-stat-units');
+        const statCost = document.getElementById('store-stat-cost');
+
+        if (statProducts) statProducts.textContent = stats.totalProductos;
+        if (statUnits) statUnits.textContent = stats.totalUnidades;
+        if (statCost) statCost.textContent = Currency.format(stats.costoTotal);
     }
 
     /**
