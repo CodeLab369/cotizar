@@ -447,8 +447,7 @@ class StoresPage {
                                    data-id="${item.id}" 
                                    value="${selectedQty}" 
                                    min="0" 
-                                   max="${item.cantidad}"
-                                   ${!isSelected ? 'disabled' : ''}>
+                                   max="${item.cantidad}">
                             <button class="qty-btn plus" data-action="increase" data-id="${item.id}" ${selectedQty >= item.cantidad ? 'disabled' : ''}>
                                 ${ICONS.plus}
                             </button>
@@ -498,11 +497,21 @@ class StoresPage {
 
         // Inputs de cantidad
         tbody.querySelectorAll('.qty-input').forEach(input => {
+            // Evento cuando cambia el valor (al perder foco o presionar Enter)
             input.addEventListener('change', (e) => {
                 const id = input.dataset.id;
                 const value = parseInt(e.target.value) || 0;
                 this.setQuantity(id, value);
             });
+
+            // Evento mientras escribe (para actualizar en tiempo real)
+            input.addEventListener('input', debounce((e) => {
+                const id = input.dataset.id;
+                const value = parseInt(e.target.value) || 0;
+                if (value > 0) {
+                    this.setQuantity(id, value);
+                }
+            }, 300));
         });
     }
 
