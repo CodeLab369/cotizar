@@ -13,7 +13,7 @@ import Header from './components/header.js';
 import LoginPage from './pages/login.js';
 import InventoryPage from './pages/inventory.js';
 import SalesPage from './pages/sales.js';
-import QuoterPage from './pages/quoter.js';
+import StoresPage from './pages/stores.js';
 import SettingsPage from './pages/settings.js';
 
 /**
@@ -32,7 +32,7 @@ class App {
             login: new LoginPage(),
             inventory: new InventoryPage(),
             clients: new SalesPage(),
-            quoter: new QuoterPage(),
+            quoter: new StoresPage(),
             settings: new SettingsPage()
         };
 
