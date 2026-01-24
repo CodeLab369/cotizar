@@ -1,0 +1,553 @@
+/**
+ * NICMAT S.R.L. - Sistema de Cotización
+ * Estilos: Página de Configuraciones
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   Layout Principal
+   ========================================================================== */
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--spacing-6);
+    min-height: calc(100vh - 220px);
+}
+
+@media (max-width: 992px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Navegación Lateral
+   ========================================================================== */
+
+.settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-4);
+    height: fit-content;
+    position: sticky;
+    top: var(--spacing-4);
+}
+
+@media (max-width: 992px) {
+    .settings-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        position: static;
+    }
+}
+
+.settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    width: 100%;
+    text-align: left;
+}
+
+@media (max-width: 992px) {
+    .settings-nav-item {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
+.settings-nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.settings-nav-item:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.settings-nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* ==========================================================================
+   Contenido
+   ========================================================================== */
+
+.settings-content {
+    flex: 1;
+}
+
+.settings-section {
+    display: none;
+}
+
+.settings-section.active {
+    display: block;
+    animation: fadeIn var(--transition-normal);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   Cards de Configuración
+   ========================================================================== */
+
+.settings-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-6);
+}
+
+.settings-card + .settings-card {
+    margin-top: var(--spacing-6);
+}
+
+.settings-card-header {
+    margin-bottom: var(--spacing-6);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-2) 0;
+}
+
+.settings-card-title svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+}
+
+.settings-card-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+/* ==========================================================================
+   Formularios
+   ========================================================================== */
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-5);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-4);
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+.form-hint {
+    margin-top: var(--spacing-1);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.form-hint strong {
+    color: var(--primary);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   Subida de Logo
+   ========================================================================== */
+
+.form-group-logo {
+    grid-column: 1 / -1;
+}
+
+.logo-upload-container {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-5);
+}
+
+@media (max-width: 576px) {
+    .logo-upload-container {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.logo-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.logo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    color: var(--text-muted);
+}
+
+.logo-placeholder svg {
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
+}
+
+.logo-placeholder span {
+    font-size: var(--font-size-xs);
+}
+
+.logo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.file-input-hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Estadísticas de Datos
+   ========================================================================== */
+
+.data-stats {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-5);
+    margin-bottom: var(--spacing-6);
+}
+
+.data-stats-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 var(--spacing-4) 0;
+}
+
+.data-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--spacing-4);
+}
+
+@media (max-width: 992px) {
+    .data-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .data-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.data-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-1);
+    text-align: center;
+}
+
+.data-stat-item svg {
+    width: 24px;
+    height: 24px;
+    color: var(--text-muted);
+}
+
+.data-stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.data-stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Secciones de Respaldo
+   ========================================================================== */
+
+.backup-section {
+    padding: var(--spacing-5);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-4);
+}
+
+.backup-section:last-child {
+    margin-bottom: 0;
+}
+
+.backup-section-danger {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.backup-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-4);
+}
+
+@media (max-width: 768px) {
+    .backup-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.backup-section-info {
+    flex: 1;
+}
+
+.backup-section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-1) 0;
+}
+
+.backup-section-title svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
+}
+
+.backup-section-title.danger svg {
+    color: var(--danger);
+}
+
+.backup-section-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.backup-actions {
+    display: flex;
+    gap: var(--spacing-2);
+}
+
+/* ==========================================================================
+   Modal de Importación/Limpieza
+   ========================================================================== */
+
+.import-confirm,
+.clear-confirm {
+    text-align: left;
+}
+
+.import-confirm p,
+.clear-confirm p {
+    margin: 0 0 var(--spacing-3) 0;
+    color: var(--text-secondary);
+}
+
+.import-list,
+.clear-list {
+    margin: 0 0 var(--spacing-4) 0;
+    padding-left: var(--spacing-6);
+}
+
+.import-list li,
+.clear-list li {
+    margin-bottom: var(--spacing-1);
+    color: var(--text-primary);
+}
+
+.import-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--warning-dark);
+}
+
+.import-warning svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.import-merge-option {
+    margin-top: var(--spacing-4);
+}
+
+.clear-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--danger);
+    font-weight: 600;
+    margin-bottom: var(--spacing-4);
+}
+
+.clear-warning svg {
+    width: 24px;
+    height: 24px;
+}
+
+.clear-note {
+    background: var(--bg-secondary);
+    padding: var(--spacing-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Botones
+   ========================================================================== */
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.btn-ghost.btn-danger {
+    color: var(--danger);
+}
+
+.btn-ghost.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+/* ==========================================================================
+   Checkbox Label
+   ========================================================================== */
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 576px) {
+    .settings-card {
+        padding: var(--spacing-4);
+    }
+    
+    .settings-card-header {
+        margin-bottom: var(--spacing-4);
+        padding-bottom: var(--spacing-3);
+    }
+    
+    .data-stats {
+        padding: var(--spacing-4);
+    }
+    
+    .backup-section {
+        padding: var(--spacing-4);
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
