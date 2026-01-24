@@ -1390,7 +1390,7 @@ class StoresPage {
         });
 
         document.getElementById('btn-confirm-send')?.addEventListener('click', () => {
-            this.confirmSendProducts(storeId, modalId);
+            this.confirmSendProductsModal(storeId, modalId);
         });
     }
 
@@ -1572,9 +1572,9 @@ class StoresPage {
     }
 
     /**
-     * Confirma y ejecuta el envío
+     * Confirma y ejecuta el envío (método del modal antiguo)
      */
-    confirmSendProducts(storeId, modalId) {
+    confirmSendProductsModal(storeId, modalId) {
         if (this.sendItems.length === 0) {
             Notifications.warning('Agrega al menos un producto para enviar');
             return;
