@@ -12,6 +12,7 @@ import Sidebar from './components/sidebar.js';
 import Header from './components/header.js';
 import LoginPage from './pages/login.js';
 import InventoryPage from './pages/inventory.js';
+import QuotationsPage from './pages/quotations.js';
 import SalesPage from './pages/sales.js';
 import StoresPage from './pages/stores.js';
 import SettingsPage from './pages/settings.js';
@@ -31,6 +32,7 @@ class App {
         this.pages = {
             login: new LoginPage(),
             inventory: new InventoryPage(),
+            quotations: new QuotationsPage(),
             clients: new SalesPage(),
             quoter: new StoresPage(),
             settings: new SettingsPage()
@@ -39,6 +41,7 @@ class App {
         // Títulos de páginas
         this.pageTitles = {
             inventory: 'Inventario',
+            quotations: 'Cotizaciones',
             clients: 'Ventas',
             quoter: 'Tiendas',
             settings: 'Configuraciones'
