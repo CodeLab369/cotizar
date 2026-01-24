@@ -661,6 +661,8 @@ class InventoryPage {
             const saveBtn = document.getElementById('modal-save');
             const cantidadLabel = document.getElementById('cantidad-label');
             const restockOptions = document.getElementById('restock-options');
+            const inputCosto = document.getElementById('input-costo');
+            const inputPrecio = document.getElementById('input-precio');
 
             alert.style.display = 'flex';
             text.innerHTML = `<strong>${product.marca} ${product.amperaje}</strong> ya existe con <strong>${product.cantidad}</strong> unidades en stock.`;
@@ -669,6 +671,17 @@ class InventoryPage {
             saveBtn.classList.add('btn-success');
             cantidadLabel.textContent = 'Cantidad a agregar';
             restockOptions.style.display = 'block';
+
+            // Auto-rellenar Costo y Precio de Venta con los valores actuales del producto
+            if (inputCosto && !inputCosto.value) {
+                inputCosto.value = Currency.format(product.costo, false);
+            }
+            if (inputPrecio && !inputPrecio.value) {
+                inputPrecio.value = Currency.format(product.precioVenta, false);
+            }
+
+            // Actualizar cálculos con los nuevos valores
+            updateCalculations();
 
             // Actualizar título del modal
             const modalTitle = document.querySelector('.modal-title');
