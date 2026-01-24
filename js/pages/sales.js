@@ -814,7 +814,7 @@ class SalesPage {
         const modalId = Modal.open({
             title: 'Detalle de Venta',
             content,
-            size: 'default',
+            size: 'lg',
             showFooter: true,
             footerContent: `<button class="btn btn-primary" id="btn-close-detail">Cerrar</button>`
         });
