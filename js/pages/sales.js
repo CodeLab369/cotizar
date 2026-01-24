@@ -17,6 +17,7 @@ const ICONS = {
     cart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`,
     plus: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
     trash: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
     eye: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
     x: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
     receipt: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2V4a2 2 0 0 1 2-2z"></path><line x1="8" y1="7" x2="16" y2="7"></line><line x1="8" y1="11" x2="16" y2="11"></line><line x1="8" y1="15" x2="13" y2="15"></line></svg>`,
@@ -633,6 +634,12 @@ class SalesPage {
                             <button class="row-action-btn view" data-action="view" data-id="${sale.id}" title="Ver detalle">
                                 ${ICONS.eye}
                             </button>
+                            <button class="row-action-btn edit" data-action="edit" data-id="${sale.id}" title="Editar">
+                                ${ICONS.edit}
+                            </button>
+                            <button class="row-action-btn delete" data-action="delete" data-id="${sale.id}" title="Eliminar">
+                                ${ICONS.trash}
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -648,6 +655,23 @@ class SalesPage {
                 const id = btn.dataset.id;
                 const sale = Sales.getById(id);
                 if (sale) this.showSaleDetail(sale);
+            });
+        });
+
+        // Eventos de editar
+        tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const sale = Sales.getById(id);
+                if (sale) this.showEditSaleModal(sale);
+            });
+        });
+
+        // Eventos de eliminar
+        tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                this.confirmDeleteSale(id);
             });
         });
     }
@@ -769,6 +793,202 @@ class SalesPage {
 
         document.getElementById('btn-close-detail')?.addEventListener('click', () => {
             Modal.close(modalId);
+        });
+    }
+
+    /**
+     * Confirma eliminación de una venta
+     */
+    confirmDeleteSale(id) {
+        const sale = Sales.getById(id);
+        if (!sale) return;
+
+        const fecha = new Date(sale.date).toLocaleString('es-BO');
+        const content = `
+            <div class="confirm-delete">
+                <p>¿Estás seguro de eliminar esta venta?</p>
+                <div class="confirm-details">
+                    <div><strong>Fecha:</strong> ${fecha}</div>
+                    <div><strong>Total:</strong> ${Currency.format(sale.totalSaldo)}</div>
+                    <div><strong>Productos:</strong> ${sale.items.length}</div>
+                </div>
+                <p class="confirm-warning">Esta acción no se puede deshacer y el stock NO será repuesto.</p>
+            </div>
+        `;
+
+        const modalId = Modal.open({
+            title: 'Eliminar Venta',
+            content,
+            size: 'small',
+            showFooter: true,
+            footerContent: `
+                <button class="btn btn-ghost" id="btn-cancel-delete">Cancelar</button>
+                <button class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>
+            `
+        });
+
+        document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
+            Modal.close(modalId);
+        });
+
+        document.getElementById('btn-confirm-delete')?.addEventListener('click', () => {
+            if (Sales.delete(id)) {
+                Notifications.success('Venta eliminada correctamente');
+                this.salesList = Sales.getAll();
+                this.renderSalesTable();
+            } else {
+                Notifications.error('No se pudo eliminar la venta');
+            }
+            Modal.close(modalId);
+        });
+    }
+
+    /**
+     * Muestra modal para editar una venta
+     */
+    showEditSaleModal(sale) {
+        const content = `
+            <div class="sale-edit-form">
+                <div class="sale-detail-row">
+                    <span class="sale-detail-label">Fecha</span>
+                    <span class="sale-detail-value">${new Date(sale.date).toLocaleString('es-BO')}</span>
+                </div>
+                
+                <div class="sale-edit-items">
+                    <div class="sale-detail-items-title">Productos</div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="edit-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Marca</th>
+                                    <th>Amperaje</th>
+                                    <th class="col-number">Cantidad</th>
+                                    <th class="col-currency">Precio</th>
+                                    <th class="col-currency">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sale.items.map((item, index) => `
+                                    <tr data-index="${index}">
+                                        <td>${item.marca}</td>
+                                        <td>${item.amperaje}</td>
+                                        <td class="col-number">
+                                            <input type="number" class="table-input edit-qty" value="${item.cantidad}" min="1" data-index="${index}">
+                                        </td>
+                                        <td class="col-currency">
+                                            <input type="text" class="table-input edit-price" value="${Currency.format(item.precio, false)}" data-index="${index}">
+                                        </td>
+                                        <td class="col-currency edit-total">${Currency.format(item.total)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="sale-edit-summary">
+                    <div class="sale-detail-row">
+                        <span class="sale-detail-label">Total Importe</span>
+                        <span class="sale-detail-value" id="edit-total-importe">${Currency.format(sale.totalImporte)}</span>
+                    </div>
+                    <div class="sale-detail-row">
+                        <span class="sale-detail-label">Descuento (Bs.)</span>
+                        <input type="text" class="form-control" id="edit-descuento" value="${Currency.format(sale.descuento, false)}">
+                    </div>
+                    <div class="sale-detail-row highlight">
+                        <span class="sale-detail-label">Total Saldo</span>
+                        <span class="sale-detail-value" id="edit-total-saldo">${Currency.format(sale.totalSaldo)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modalId = Modal.open({
+            title: 'Editar Venta',
+            content,
+            size: 'default',
+            showFooter: true,
+            footerContent: `
+                <button class="btn btn-ghost" id="btn-cancel-edit">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-edit">Guardar Cambios</button>
+            `
+        });
+
+        // Datos editados
+        const editedItems = sale.items.map(item => ({...item}));
+        let editedDescuento = sale.descuento;
+
+        const updateEditTotals = () => {
+            const totalImporte = editedItems.reduce((sum, item) => sum + item.total, 0);
+            const totalSaldo = Math.max(0, totalImporte - editedDescuento);
+            document.getElementById('edit-total-importe').textContent = Currency.format(totalImporte);
+            document.getElementById('edit-total-saldo').textContent = Currency.format(totalSaldo);
+        };
+
+        // Eventos de cantidad
+        document.querySelectorAll('.edit-qty').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                const val = parseInt(e.target.value) || 1;
+                editedItems[index].cantidad = val;
+                editedItems[index].total = Currency.round(val * editedItems[index].precio);
+                e.target.closest('tr').querySelector('.edit-total').textContent = Currency.format(editedItems[index].total);
+                updateEditTotals();
+            });
+        });
+
+        // Eventos de precio
+        document.querySelectorAll('.edit-price').forEach(input => {
+            input.addEventListener('input', (e) => {
+                e.target.value = Currency.formatInput(e.target.value);
+            });
+            input.addEventListener('change', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                const val = Currency.parse(e.target.value) || 0;
+                editedItems[index].precio = val;
+                editedItems[index].total = Currency.round(editedItems[index].cantidad * val);
+                e.target.closest('tr').querySelector('.edit-total').textContent = Currency.format(editedItems[index].total);
+                updateEditTotals();
+            });
+        });
+
+        // Evento de descuento
+        document.getElementById('edit-descuento')?.addEventListener('input', (e) => {
+            e.target.value = Currency.formatInput(e.target.value);
+        });
+        document.getElementById('edit-descuento')?.addEventListener('change', (e) => {
+            editedDescuento = Currency.parse(e.target.value) || 0;
+            updateEditTotals();
+        });
+
+        // Cancelar
+        document.getElementById('btn-cancel-edit')?.addEventListener('click', () => {
+            Modal.close(modalId);
+        });
+
+        // Guardar
+        document.getElementById('btn-save-edit')?.addEventListener('click', () => {
+            const totalBaterias = editedItems.reduce((sum, item) => sum + item.cantidad, 0);
+            const totalImporte = editedItems.reduce((sum, item) => sum + item.total, 0);
+            const totalSaldo = Math.max(0, Currency.round(totalImporte - editedDescuento));
+
+            const updatedSale = {
+                ...sale,
+                items: editedItems,
+                totalBaterias,
+                totalImporte,
+                descuento: editedDescuento,
+                totalSaldo
+            };
+
+            if (Sales.update(sale.id, updatedSale)) {
+                Notifications.success('Venta actualizada correctamente');
+                this.salesList = Sales.getAll();
+                this.renderSalesTable();
+                Modal.close(modalId);
+            } else {
+                Notifications.error('No se pudo actualizar la venta');
+            }
         });
     }
 

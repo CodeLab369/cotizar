@@ -103,6 +103,30 @@ class SalesService {
     }
 
     /**
+     * Actualiza una venta existente
+     * @param {string} id
+     * @param {Object} updatedSale
+     * @returns {boolean}
+     */
+    update(id, updatedSale) {
+        const sales = this.getAll();
+        const index = sales.findIndex(sale => sale.id === id);
+        if (index === -1) return false;
+        
+        sales[index] = {
+            ...sales[index],
+            items: updatedSale.items,
+            totalBaterias: updatedSale.totalBaterias,
+            totalImporte: updatedSale.totalImporte,
+            descuento: updatedSale.descuento,
+            totalSaldo: updatedSale.totalSaldo
+        };
+        
+        Storage.set(STORAGE_KEY, sales);
+        return true;
+    }
+
+    /**
      * Elimina una venta (no repone stock)
      * @param {string} id
      * @returns {boolean}
