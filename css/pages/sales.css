@@ -198,6 +198,12 @@
     font-weight: var(--font-weight-medium);
 }
 
+.confirm-info {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
 /* Modal de edición de venta */
 .sale-edit-form {
     display: grid;

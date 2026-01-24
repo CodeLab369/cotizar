@@ -37,6 +37,7 @@ class SalesPage {
         this.discount = 0;
         this.currentPage = 1;
         this.itemsPerPage = 5;
+        this.editingSaleId = null; // ID de venta en edición
     }
 
     /**
@@ -49,6 +50,7 @@ class SalesPage {
         this.items = [];
         this.discount = 0;
         this.currentPage = 1;
+        this.editingSaleId = null;
 
         this.renderContent();
         this.bindEvents();
@@ -522,12 +524,28 @@ class SalesPage {
         document.getElementById('summary-baterias').textContent = totalBaterias;
         document.getElementById('summary-importe').textContent = Currency.format(totalImporte);
         document.getElementById('summary-saldo').textContent = Currency.format(saldo);
+        
+        // Actualizar texto del botón según modo
+        const btnSave = document.getElementById('btn-save-sale');
+        const btnClear = document.getElementById('btn-clear-sale');
+        if (btnSave) {
+            btnSave.textContent = this.editingSaleId ? 'Actualizar Venta' : 'Registrar Venta';
+        }
+        if (btnClear) {
+            btnClear.textContent = this.editingSaleId ? 'Cancelar Edición' : 'Limpiar';
+        }
     }
 
     /**
-     * Limpia venta actual
+     * Limpia venta actual o cancela edición
      */
     clearCurrentSale() {
+        if (this.editingSaleId) {
+            // Cancelar edición - re-descontar stock
+            this.cancelEdit();
+            return;
+        }
+        
         this.items = [];
         this.discount = 0;
         
@@ -545,7 +563,7 @@ class SalesPage {
     }
 
     /**
-     * Guarda la venta
+     * Guarda la venta (nueva o editada)
      */
     saveSale() {
         if (this.items.length === 0) {
@@ -554,12 +572,22 @@ class SalesPage {
         }
 
         try {
-            Sales.add({
-                items: this.items,
-                descuento: this.discount
-            });
-
-            Notifications.success('Venta registrada correctamente');
+            if (this.editingSaleId) {
+                // Actualizar venta existente
+                Sales.updateWithStock(this.editingSaleId, {
+                    items: this.items,
+                    descuento: this.discount
+                });
+                Notifications.success('Venta actualizada correctamente');
+                this.editingSaleId = null;
+            } else {
+                // Nueva venta
+                Sales.add({
+                    items: this.items,
+                    descuento: this.discount
+                });
+                Notifications.success('Venta registrada correctamente');
+            }
             
             this.items = [];
             this.discount = 0;
@@ -811,8 +839,9 @@ class SalesPage {
                     <div><strong>Fecha:</strong> ${fecha}</div>
                     <div><strong>Total:</strong> ${Currency.format(sale.totalSaldo)}</div>
                     <div><strong>Productos:</strong> ${sale.items.length}</div>
+                    <div><strong>Unidades:</strong> ${sale.totalBaterias}</div>
                 </div>
-                <p class="confirm-warning">Esta acción no se puede deshacer y el stock NO será repuesto.</p>
+                <p class="confirm-info">El stock de los productos será repuesto al inventario.</p>
             </div>
         `;
 
@@ -833,9 +862,12 @@ class SalesPage {
 
         document.getElementById('btn-confirm-delete')?.addEventListener('click', () => {
             if (Sales.delete(id)) {
-                Notifications.success('Venta eliminada correctamente');
+                Notifications.success('Venta eliminada y stock repuesto');
+                this.inventory = Inventory.getAll();
                 this.salesList = Sales.getAll();
                 this.renderSalesTable();
+                this.populateBrandSelect();
+                this.updateStockInfo();
             } else {
                 Notifications.error('No se pudo eliminar la venta');
             }
@@ -844,152 +876,76 @@ class SalesPage {
     }
 
     /**
-     * Muestra modal para editar una venta
+     * Edita una venta cargándola en el formulario principal
      */
     showEditSaleModal(sale) {
-        const content = `
-            <div class="sale-edit-form">
-                <div class="sale-detail-row">
-                    <span class="sale-detail-label">Fecha</span>
-                    <span class="sale-detail-value">${new Date(sale.date).toLocaleString('es-BO')}</span>
-                </div>
-                
-                <div class="sale-edit-items">
-                    <div class="sale-detail-items-title">Productos</div>
-                    <div class="table-wrapper">
-                        <table class="data-table" id="edit-items-table">
-                            <thead>
-                                <tr>
-                                    <th>Marca</th>
-                                    <th>Amperaje</th>
-                                    <th class="col-number">Cantidad</th>
-                                    <th class="col-currency">Precio</th>
-                                    <th class="col-currency">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${sale.items.map((item, index) => `
-                                    <tr data-index="${index}">
-                                        <td>${item.marca}</td>
-                                        <td>${item.amperaje}</td>
-                                        <td class="col-number">
-                                            <input type="number" class="table-input edit-qty" value="${item.cantidad}" min="1" data-index="${index}">
-                                        </td>
-                                        <td class="col-currency">
-                                            <input type="text" class="table-input edit-price" value="${Currency.format(item.precio, false)}" data-index="${index}">
-                                        </td>
-                                        <td class="col-currency edit-total">${Currency.format(item.total)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        // Primero reponer el stock de la venta original
+        Sales.restoreStock(sale.id);
+        
+        // Marcar que estamos editando
+        this.editingSaleId = sale.id;
+        
+        // Cargar items en el formulario
+        this.items = sale.items.map(item => ({
+            productId: item.productId,
+            marca: item.marca,
+            amperaje: item.amperaje,
+            cantidad: item.cantidad,
+            precio: item.precio,
+            total: item.total
+        }));
+        
+        // Cargar descuento
+        this.discount = sale.descuento;
+        const descInput = document.getElementById('summary-descuento');
+        if (descInput) descInput.value = Currency.format(sale.descuento, false);
+        
+        // Refrescar inventario y UI
+        this.inventory = Inventory.getAll();
+        this.populateBrandSelect();
+        this.renderSaleItemsTable();
+        this.updateSummary();
+        this.updateStockInfo();
+        
+        // Scroll al formulario
+        this.container.scrollIntoView({ behavior: 'smooth' });
+        
+        Notifications.info(`Editando venta del ${new Date(sale.date).toLocaleDateString('es-BO')}. Modifica los productos y guarda.`);
+    }
 
-                <div class="sale-edit-summary">
-                    <div class="sale-detail-row">
-                        <span class="sale-detail-label">Total Importe</span>
-                        <span class="sale-detail-value" id="edit-total-importe">${Currency.format(sale.totalImporte)}</span>
-                    </div>
-                    <div class="sale-detail-row">
-                        <span class="sale-detail-label">Descuento (Bs.)</span>
-                        <input type="text" class="form-control" id="edit-descuento" value="${Currency.format(sale.descuento, false)}">
-                    </div>
-                    <div class="sale-detail-row highlight">
-                        <span class="sale-detail-label">Total Saldo</span>
-                        <span class="sale-detail-value" id="edit-total-saldo">${Currency.format(sale.totalSaldo)}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const modalId = Modal.open({
-            title: 'Editar Venta',
-            content,
-            size: 'default',
-            showFooter: true,
-            footerContent: `
-                <button class="btn btn-ghost" id="btn-cancel-edit">Cancelar</button>
-                <button class="btn btn-primary" id="btn-save-edit">Guardar Cambios</button>
-            `
-        });
-
-        // Datos editados
-        const editedItems = sale.items.map(item => ({...item}));
-        let editedDescuento = sale.descuento;
-
-        const updateEditTotals = () => {
-            const totalImporte = editedItems.reduce((sum, item) => sum + item.total, 0);
-            const totalSaldo = Math.max(0, totalImporte - editedDescuento);
-            document.getElementById('edit-total-importe').textContent = Currency.format(totalImporte);
-            document.getElementById('edit-total-saldo').textContent = Currency.format(totalSaldo);
-        };
-
-        // Eventos de cantidad
-        document.querySelectorAll('.edit-qty').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const index = parseInt(e.target.dataset.index);
-                const val = parseInt(e.target.value) || 1;
-                editedItems[index].cantidad = val;
-                editedItems[index].total = Currency.round(val * editedItems[index].precio);
-                e.target.closest('tr').querySelector('.edit-total').textContent = Currency.format(editedItems[index].total);
-                updateEditTotals();
-            });
-        });
-
-        // Eventos de precio
-        document.querySelectorAll('.edit-price').forEach(input => {
-            input.addEventListener('input', (e) => {
-                e.target.value = Currency.formatInput(e.target.value);
-            });
-            input.addEventListener('change', (e) => {
-                const index = parseInt(e.target.dataset.index);
-                const val = Currency.parse(e.target.value) || 0;
-                editedItems[index].precio = val;
-                editedItems[index].total = Currency.round(editedItems[index].cantidad * val);
-                e.target.closest('tr').querySelector('.edit-total').textContent = Currency.format(editedItems[index].total);
-                updateEditTotals();
-            });
-        });
-
-        // Evento de descuento
-        document.getElementById('edit-descuento')?.addEventListener('input', (e) => {
-            e.target.value = Currency.formatInput(e.target.value);
-        });
-        document.getElementById('edit-descuento')?.addEventListener('change', (e) => {
-            editedDescuento = Currency.parse(e.target.value) || 0;
-            updateEditTotals();
-        });
-
-        // Cancelar
-        document.getElementById('btn-cancel-edit')?.addEventListener('click', () => {
-            Modal.close(modalId);
-        });
-
-        // Guardar
-        document.getElementById('btn-save-edit')?.addEventListener('click', () => {
-            const totalBaterias = editedItems.reduce((sum, item) => sum + item.cantidad, 0);
-            const totalImporte = editedItems.reduce((sum, item) => sum + item.total, 0);
-            const totalSaldo = Math.max(0, Currency.round(totalImporte - editedDescuento));
-
-            const updatedSale = {
-                ...sale,
-                items: editedItems,
-                totalBaterias,
-                totalImporte,
-                descuento: editedDescuento,
-                totalSaldo
-            };
-
-            if (Sales.update(sale.id, updatedSale)) {
-                Notifications.success('Venta actualizada correctamente');
-                this.salesList = Sales.getAll();
-                this.renderSalesTable();
-                Modal.close(modalId);
-            } else {
-                Notifications.error('No se pudo actualizar la venta');
-            }
-        });
+    /**
+     * Cancela la edición de una venta
+     */
+    cancelEdit() {
+        if (!this.editingSaleId) return;
+        
+        const sale = Sales.getById(this.editingSaleId);
+        if (sale) {
+            // Re-descontar el stock que habíamos repuesto
+            Sales.deductStock(sale.items);
+        }
+        
+        this.editingSaleId = null;
+        
+        // Limpiar manualmente sin llamar clearCurrentSale
+        this.items = [];
+        this.discount = 0;
+        
+        const descInput = document.getElementById('summary-descuento');
+        if (descInput) descInput.value = '';
+        
+        document.getElementById('sale-cantidad').value = '';
+        document.getElementById('sale-precio').value = '';
+        document.getElementById('sale-amperaje').innerHTML = `<option value="">Seleccione amperaje</option>`;
+        
+        this.inventory = Inventory.getAll();
+        this.populateBrandSelect();
+        this.updateLineTotal();
+        this.renderSaleItemsTable();
+        this.updateSummary();
+        this.updateStockInfo();
+        
+        Notifications.info('Edición cancelada');
     }
 
     /**

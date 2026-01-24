@@ -127,14 +127,121 @@ class SalesService {
     }
 
     /**
-     * Elimina una venta (no repone stock)
+     * Actualiza una venta con manejo de stock (para edición completa)
+     * @param {string} id
+     * @param {Object} saleData
+     * @returns {Object}
+     */
+    updateWithStock(id, saleData) {
+        const sales = this.getAll();
+        const index = sales.findIndex(sale => sale.id === id);
+        if (index === -1) throw new Error('Venta no encontrada');
+        
+        const oldSale = sales[index];
+        
+        // Validar y preparar nuevos items
+        const preparedItems = saleData.items.map(item => {
+            const product = Inventory.findByMarcaAmperaje(item.marca, item.amperaje);
+            if (!product) throw new Error(`Producto no encontrado: ${item.marca} ${item.amperaje}`);
+
+            const cantidad = parseInt(item.cantidad) || 0;
+            const precio = Currency.parse(item.precio) || 0;
+            if (cantidad <= 0) throw new Error(`Cantidad inválida para ${item.marca} ${item.amperaje}`);
+            if (precio < 0) throw new Error(`Precio inválido para ${item.marca} ${item.amperaje}`);
+
+            // Validar stock (ya fue repuesto antes de editar)
+            if (cantidad > product.cantidad) {
+                throw new Error(`Stock insuficiente para ${item.marca} ${item.amperaje}. Disponible: ${product.cantidad}`);
+            }
+
+            return {
+                productId: product.id,
+                marca: product.marca,
+                amperaje: product.amperaje,
+                cantidad,
+                precio,
+                total: Currency.round(cantidad * precio)
+            };
+        });
+
+        const totalBaterias = preparedItems.reduce((sum, item) => sum + item.cantidad, 0);
+        const totalImporte = preparedItems.reduce((sum, item) => sum + item.total, 0);
+        const descuento = Currency.parse(saleData.descuento) || 0;
+        const totalSaldo = Math.max(0, Currency.round(totalImporte - descuento));
+
+        // Descontar stock de nuevos items
+        this.deductStock(preparedItems);
+
+        // Actualizar venta
+        sales[index] = {
+            ...oldSale,
+            items: preparedItems,
+            totalBaterias,
+            totalImporte,
+            descuento,
+            totalSaldo
+        };
+        
+        Storage.set(STORAGE_KEY, sales);
+        return sales[index];
+    }
+
+    /**
+     * Repone el stock de una venta
+     * @param {string} id
+     */
+    restoreStock(id) {
+        const sale = this.getById(id);
+        if (!sale) return;
+        
+        sale.items.forEach(item => {
+            const product = Inventory.getById(item.productId);
+            if (product) {
+                Inventory.update(product.id, {
+                    marca: product.marca,
+                    amperaje: product.amperaje,
+                    cantidad: product.cantidad + item.cantidad,
+                    costo: product.costo,
+                    precioVenta: product.precioVenta
+                });
+            }
+        });
+    }
+
+    /**
+     * Descuenta stock de items
+     * @param {Array} items
+     */
+    deductStock(items) {
+        items.forEach(item => {
+            const product = Inventory.getById(item.productId);
+            if (product) {
+                Inventory.update(product.id, {
+                    marca: product.marca,
+                    amperaje: product.amperaje,
+                    cantidad: product.cantidad - item.cantidad,
+                    costo: product.costo,
+                    precioVenta: product.precioVenta
+                });
+            }
+        });
+    }
+
+    /**
+     * Elimina una venta y repone stock
      * @param {string} id
      * @returns {boolean}
      */
     delete(id) {
+        const sale = this.getById(id);
+        if (!sale) return false;
+        
+        // Reponer stock
+        this.restoreStock(id);
+        
+        // Eliminar venta
         const sales = this.getAll();
-        const filtered = sales.filter(sale => sale.id !== id);
-        if (filtered.length === sales.length) return false;
+        const filtered = sales.filter(s => s.id !== id);
         Storage.set(STORAGE_KEY, filtered);
         return true;
     }
