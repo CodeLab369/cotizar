@@ -141,6 +141,10 @@ class QuotationsPage {
                                 <label class="form-label" for="cliente-email">Email</label>
                                 <input type="email" id="cliente-email" placeholder="Email">
                             </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cliente-direccion">Dirección</label>
+                                <input type="text" id="cliente-direccion" placeholder="Dirección del cliente">
+                            </div>
                         </div>
                     </div>
 
@@ -564,6 +568,7 @@ class QuotationsPage {
         document.getElementById('cliente-nombre').value = '';
         document.getElementById('cliente-telefono').value = '';
         document.getElementById('cliente-email').value = '';
+        document.getElementById('cliente-direccion').value = '';
         document.getElementById('summary-descuento').value = '';
         document.getElementById('quotation-marca').value = '';
         document.getElementById('quotation-amperaje').innerHTML = '<option value="">Seleccione amperaje</option>';
@@ -598,7 +603,8 @@ class QuotationsPage {
             vigenciaDias: vigencia,
             clienteNombre: document.getElementById('cliente-nombre')?.value || '',
             clienteTelefono: document.getElementById('cliente-telefono')?.value || '',
-            clienteEmail: document.getElementById('cliente-email')?.value || ''
+            clienteEmail: document.getElementById('cliente-email')?.value || '',
+            clienteDireccion: document.getElementById('cliente-direccion')?.value || ''
         };
 
         try {
